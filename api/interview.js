@@ -3,7 +3,7 @@
  * The API key lives in the GEMINI_API_KEY env var and never reaches the browser.
  */
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const COACH_RULES = `

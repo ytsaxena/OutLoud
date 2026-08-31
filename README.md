@@ -12,7 +12,7 @@ An AI speaking coach for people who read and write English well but freeze when 
    | Name | Value |
    |---|---|
    | `GEMINI_API_KEY` | your key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — it starts with `AIza` |
-   | `GEMINI_MODEL` | `gemini-2.5-flash` (optional) |
+   | `GEMINI_MODEL` | `gemini-3.6-flash` (optional) |
 
 4. Deploy. Open the HTTPS URL on your phone in **Chrome**.
 
