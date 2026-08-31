@@ -81,11 +81,8 @@ async function callGemini(prompt) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set');
 
-  // Studio API keys start with "AIza" and go in a header.
-  // OAuth access tokens (AQ..., ya29...) must go in an Authorization: Bearer header.
-  const headers = { 'Content-Type': 'application/json' };
-  if (/^AIza/.test(key)) headers['x-goog-api-key'] = key;
-  else headers['Authorization'] = 'Bearer ' + key;
+  // AI Studio keys (AIza..., AQ...) both go in x-goog-api-key.
+  const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': key };
 
   const res = await fetch(ENDPOINT, {
     method: 'POST',
