@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#5A4AE3">
+<title>OutLoud — Practise speaking English</title>
+<meta name="description" content="A private AI interview room to practise speaking English out loud. Free, on your phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,600;8..144,700&display=swap" rel="stylesheet">
+<style>
+/* ============ MATERIAL DESIGN 3 — TOKENS ============ */
+:root{
+  --primary:#5A4AE3; --on-primary:#FFFFFF;
+  --primary-container:#E4DFFF; --on-primary-container:#180067;
+  --secondary:#605A71; --secondary-container:#E7DEF8; --on-secondary-container:#1D192B;
+  --tertiary:#7C5265; --tertiary-container:#FFD9E5; --on-tertiary-container:#31101F;
+  --error:#B3261E; --error-container:#F9DEDC; --on-error-container:#410E0B;
+  --success:#2A6B4F; --success-container:#BCEBD4; --on-success-container:#08281A;
+  --warn:#8A5A00; --warn-container:#FFDFA8; --on-warn-container:#2A1800;
+  --surface:#FDF8FF; --on-surface:#1C1B1F;
+  --surface-container-lowest:#FFFFFF;
+  --surface-container-low:#F7F2FA;
+  --surface-container:#F2ECF6;
+  --surface-container-high:#ECE6F0;
+  --surface-container-highest:#E6E0E9;
+  --on-surface-variant:#49454F;
+  --outline:#79747E; --outline-variant:#CDC6D3;
+  --scrim:rgba(20,18,24,.55);
+  --shadow:0 1px 2px rgba(0,0,0,.12), 0 2px 8px rgba(60,40,120,.10);
+  --shadow-2:0 2px 6px rgba(0,0,0,.10), 0 8px 24px rgba(60,40,120,.16);
+  /* shape */
+  --r-xs:8px; --r-s:12px; --r-m:16px; --r-l:24px; --r-xl:28px; --r-full:999px;
+  /* motion */
+  --ease:cubic-bezier(.2,0,0,1);
+  --ease-spring:cubic-bezier(.34,1.4,.5,1);
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --primary:#C7BFFF; --on-primary:#291A8C;
+    --primary-container:#4032C4; --on-primary-container:#E4DFFF;
+    --secondary:#CBC2DB; --secondary-container:#484254; --on-secondary-container:#E8DEF8;
+    --tertiary:#EFB8CD; --tertiary-container:#623B4D; --on-tertiary-container:#FFD9E5;
+    --error:#F2B8B5; --error-container:#8C1D18; --on-error-container:#F9DEDC;
+    --success:#A1CFB7; --success-container:#0E4634; --on-success-container:#BCEBD4;
+    --warn:#F2C06B; --warn-container:#5C3D00; --on-warn-container:#FFDFA8;
+    --surface:#141218; --on-surface:#E7E0EA;
+    --surface-container-lowest:#0E0C12;
+    --surface-container-low:#1C1B1F;
+    --surface-container:#211F26;
+    --surface-container-high:#2B2930;
+    --surface-container-highest:#36343B;
+    --on-surface-variant:#CBC4CF;
+    --outline:#948F99; --outline-variant:#49454F;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+    --shadow-2:0 8px 28px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0; background:var(--surface); color:var(--on-surface);
+  font-family:"Roboto Flex",Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.5; overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+}
+#app{max-width:520px; margin:0 auto; min-height:100dvh; position:relative;
+     padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+
+/* ============ TYPE SCALE ============ */
+.display{font-size:clamp(30px,8vw,38px); line-height:1.15; font-weight:600; letter-spacing:-.5px; margin:0}
+.headline{font-size:24px; line-height:1.25; font-weight:600; letter-spacing:-.2px; margin:0}
+.title{font-size:19px; line-height:1.3; font-weight:600; margin:0}
+.body{font-size:16px; margin:0; color:var(--on-surface-variant)}
+.label{font-size:13px; font-weight:600; letter-spacing:.4px; color:var(--on-surface-variant); margin:0}
+.overline{font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--primary); margin:0}
+
+/* ============ SCREENS ============ */
+.screen{display:none; padding:20px 20px 32px; animation:fade .4s var(--ease)}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
+
+/* ============ BUTTONS ============ */
+button{font-family:inherit}
+.btn{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; min-height:56px; padding:0 24px; border:0;
+  border-radius:var(--r-full); background:var(--primary); color:var(--on-primary);
+  font-size:16px; font-weight:600; cursor:pointer; box-shadow:var(--shadow);
+  transition:transform .2s var(--ease-spring), box-shadow .2s var(--ease), background .2s;
+}
+.btn:active{transform:scale(.96)}
+.btn[disabled]{opacity:.38; box-shadow:none; pointer-events:none}
+.btn.tonal{background:var(--secondary-container); color:var(--on-secondary-container); box-shadow:none}
+.btn.outline{background:transparent; color:var(--primary); border:1px solid var(--outline-variant); box-shadow:none}
+.btn.text{background:transparent; color:var(--primary); box-shadow:none; min-height:44px}
+.btn.small{min-height:44px; font-size:14px; padding:0 18px; width:auto}
+
+/* ============ CARDS ============ */
+.card{background:var(--surface-container-low); border-radius:var(--r-xl); padding:20px; margin-bottom:14px}
+.card.tint{background:var(--primary-container); color:var(--on-primary-container)}
+.card.flat{background:var(--surface-container); }
+.card.out{background:transparent; border:1px solid var(--outline-variant)}
+
+/* ============ CHOICE CHIPS / LIST ============ */
+.choice{
+  display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+  background:var(--surface-container-low); border:2px solid transparent;
+  border-radius:var(--r-l); padding:16px; margin-bottom:10px; cursor:pointer;
+  color:var(--on-surface); transition:all .25s var(--ease);
+}
+.choice:active{transform:scale(.98)}
+.choice[aria-pressed="true"]{border-color:var(--primary); background:var(--primary-container); color:var(--on-primary-container)}
+.choice .emo{font-size:26px; line-height:1; flex:0 0 auto}
+.choice .txt{flex:1}
+.choice .txt b{display:block; font-size:16px; font-weight:600}
+.choice .txt span{font-size:13.5px; opacity:.75}
+.choice .tick{width:22px; height:22px; border-radius:50%; border:2px solid var(--outline); flex:0 0 auto; position:relative}
+.choice[aria-pressed="true"] .tick{border-color:currentColor; background:currentColor}
+.choice[aria-pressed="true"] .tick::after{content:""; position:absolute; inset:5px; border-radius:50%; background:var(--primary-container)}
+
+/* ============ PROGRESS / STEPPER ============ */
+.stepper{display:flex; gap:6px; margin-bottom:24px}
+.stepper i{height:4px; flex:1; border-radius:2px; background:var(--surface-container-highest); transition:background .4s var(--ease)}
+.stepper i.done{background:var(--primary)}
+
+/* ============ INTERVIEW ROOM ============ */
+#room{padding:0; display:none; height:100dvh; flex-direction:column; background:var(--surface-container-lowest)}
+#room.on{display:flex}
+.room-top{
+  position:relative; flex:1 1 52%; min-height:0; overflow:hidden;
+  background:linear-gradient(160deg,#2C2350,#141024);
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.room-top img.avatar{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 18%;
+  transform:scale(1.02); transition:transform 6s linear;
+}
+.room-top.speaking img.avatar{transform:scale(1.06)}
+.veil{position:absolute; inset:0; background:linear-gradient(to bottom,rgba(10,8,20,.45) 0%,rgba(10,8,20,0) 30%,rgba(10,8,20,.25) 60%,rgba(10,8,20,.88) 100%)}
+.who{position:absolute; top:14px; left:14px; display:flex; align-items:center; gap:10px; z-index:3}
+.who .dot{width:9px;height:9px;border-radius:50%;background:#4ADE80; box-shadow:0 0 0 0 rgba(74,222,128,.6); animation:live 2.4s infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 rgba(74,222,128,.55)}70%{box-shadow:0 0 0 10px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+.who b{color:#fff; font-size:15px; font-weight:600; display:block; line-height:1.15}
+.who span{color:rgba(255,255,255,.72); font-size:11.5px}
+.qcount{position:absolute; top:14px; right:14px; z-index:3; display:flex; gap:6px; align-items:center}
+.qcount i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3); transition:all .35s var(--ease-spring)}
+.qcount i.on{background:#fff; width:22px; border-radius:4px}
+.qcount i.done{background:#4ADE80}
+
+/* speaking ring */
+.stack{position:absolute; left:14px; right:14px; bottom:14px; z-index:4}
+.aura{height:0; overflow:hidden; opacity:0; display:flex; align-items:flex-end; justify-content:center; gap:4px;
+      margin-bottom:0; transition:height .35s var(--ease), opacity .3s, margin-bottom .35s var(--ease)}
+.room-top.speaking .aura{height:40px; opacity:1; margin-bottom:10px}
+.aura b{width:5px; border-radius:3px; background:rgba(199,191,255,.95); animation:eq .9s var(--ease) infinite}
+@keyframes eq{0%,100%{height:6px}50%{height:34px}}
+
+.caption{
+  background:rgba(16,12,30,.62); backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.10);
+  color:#fff; padding:14px 16px; border-radius:var(--r-l); font-size:16.5px; line-height:1.4;
+  max-height:34vh; overflow:auto;
+}
+.caption .qn{display:block; font-size:10.5px; letter-spacing:1.3px; text-transform:uppercase; color:#C7BFFF; font-weight:700; margin-bottom:5px}
+
+.room-bottom{
+  flex:1 1 48%; min-height:0; position:relative; background:#0C0A12;
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+#selfcam{width:100%; height:100%; object-fit:cover; transform:scaleX(-1); background:#0C0A12}
+.camoff{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:rgba(255,255,255,.5); font-size:14px; background:#0C0A12}
+.camoff .ini{width:76px;height:76px;border-radius:50%;background:var(--primary-container); color:var(--on-primary-container); display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700}
+.hidden{display:none !important}
+
+/* live transcript over user's video */
+.live{
+  position:absolute; left:12px; right:12px; top:12px; z-index:5;
+  background:rgba(16,12,30,.60); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  color:#fff; padding:10px 14px; border-radius:var(--r-m); font-size:15px; line-height:1.35;
+  max-height:34%; overflow:auto; border:1px solid rgba(255,255,255,.08);
+}
+.live.empty{color:rgba(255,255,255,.45); font-style:italic}
+
+/* mic dock */
+.dock{
+  position:absolute; bottom:0; left:0; right:0; z-index:6;
+  padding:14px 16px calc(16px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,rgba(8,6,14,.94),rgba(8,6,14,0));
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+}
+.icobtn{
+  width:52px;height:52px;border-radius:50%; border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.10); color:#fff; display:flex;align-items:center;justify-content:center;
+  cursor:pointer; transition:transform .2s var(--ease-spring), background .2s;
+  backdrop-filter:blur(8px);
+}
+.icobtn:active{transform:scale(.9)}
+.icobtn.off{background:rgba(179,38,30,.9); border-color:transparent}
+.mic{
+  width:84px;height:84px;border-radius:50%;border:0; background:var(--primary); color:#fff;
+  display:flex;align-items:center;justify-content:center; cursor:pointer; position:relative;
+  box-shadow:0 6px 24px rgba(90,74,227,.5);
+  transition:transform .25s var(--ease-spring), background .3s;
+}
+.mic:active{transform:scale(.93)}
+.mic[data-state="listening"]{background:#D93A3A; box-shadow:0 6px 28px rgba(217,58,58,.55)}
+.mic[data-state="thinking"]{background:var(--secondary-container); color:var(--on-secondary-container)}
+.mic[data-state="idle-locked"]{background:rgba(255,255,255,.14); color:rgba(255,255,255,.5); box-shadow:none}
+.mic .ring{position:absolute; inset:-6px; border-radius:50%; border:3px solid rgba(217,58,58,.5); opacity:0}
+.mic[data-state="listening"] .ring{opacity:1; animation:pulse 1.6s var(--ease) infinite}
+@keyframes pulse{0%{transform:scale(.95);opacity:.8}100%{transform:scale(1.35);opacity:0}}
+.micwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.micwrap small{color:rgba(255,255,255,.8); font-size:11.5px; font-weight:600; letter-spacing:.4px}
+
+/* ============ SCORECARD ============ */
+.scorehero{background:linear-gradient(150deg,var(--primary),#7C63F0); color:#fff; border-radius:var(--r-xl); padding:26px 22px; margin-bottom:16px; position:relative; overflow:hidden}
+.scorehero::after{content:""; position:absolute; right:-40px; top:-40px; width:170px;height:170px;border-radius:50%; background:rgba(255,255,255,.10)}
+.bignum{font-size:60px; font-weight:700; line-height:1; letter-spacing:-2px}
+.bar{margin-bottom:14px}
+.bar .top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
+.bar .top b{font-size:14.5px; font-weight:600}
+.bar .top span{font-size:13px; color:var(--on-surface-variant); font-variant-numeric:tabular-nums}
+.track{height:10px; border-radius:5px; background:var(--surface-container-highest); overflow:hidden}
+.fill{height:100%; border-radius:5px; background:var(--primary); width:0; transition:width 1.1s var(--ease)}
+.stats{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.stat{background:var(--surface-container); border-radius:var(--r-m); padding:14px}
+.stat b{display:block; font-size:24px; font-weight:700; line-height:1.1}
+.stat span{font-size:12px; color:var(--on-surface-variant)}
+.quote{border-left:3px solid var(--outline-variant); padding-left:12px; font-size:15px; color:var(--on-surface-variant); font-style:italic; margin:0 0 12px}
+.better{background:var(--success-container); color:var(--on-success-container); border-radius:var(--r-m); padding:14px; font-size:15.5px; line-height:1.45}
+ul.ticks{list-style:none; padding:0; margin:0}
+ul.ticks li{display:flex; gap:10px; margin-bottom:10px; font-size:15px; line-height:1.45}
+ul.ticks li::before{content:"✓"; color:var(--success); font-weight:800; flex:0 0 auto}
+
+/* ============ MISC ============ */
+.streak{display:flex; align-items:center; gap:14px; background:var(--primary-container); color:var(--on-primary-container); border-radius:var(--r-xl); padding:18px 20px; margin-bottom:14px}
+.streak .n{font-size:34px; font-weight:700; line-height:1}
+.row{display:flex; gap:10px}
+.row .btn{flex:1}
+.hist{display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--outline-variant)}
+.hist:last-child{border:0}
+.hist .sc{width:44px;height:44px;border-radius:var(--r-s); background:var(--surface-container-high); display:flex;align-items:center;justify-content:center; font-weight:700; font-size:15px; flex:0 0 auto}
+.note{font-size:13px; color:var(--on-surface-variant); display:flex; gap:8px; align-items:flex-start; margin-top:14px}
+.spinner{width:22px;height:22px;border:3px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sheet{position:fixed; inset:0; background:var(--scrim); display:none; align-items:flex-end; justify-content:center; z-index:50}
+.sheet.on{display:flex}
+.sheet .inner{background:var(--surface-container-high); width:100%; max-width:520px; border-radius:var(--r-xl) var(--r-xl) 0 0; padding:12px 20px calc(24px + env(safe-area-inset-bottom)); animation:up .35s var(--ease)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.grab{width:34px;height:4px;border-radius:2px;background:var(--outline-variant); margin:0 auto 16px}
+.mtable{width:100%; border-collapse:collapse; font-size:14px}
+.mtable td{padding:9px 0; border-bottom:1px solid var(--outline-variant)}
+.mtable td:last-child{text-align:right; font-weight:700; font-variant-numeric:tabular-nums}
+svg{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════════ 1. WELCOME ══════════════ -->
+<section class="screen on" id="s-welcome">
+  <div style="height:6vh"></div>
+  <div style="width:96px;height:96px;border-radius:30px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;margin-bottom:24px">
+    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#180067" stroke-width="2" stroke-linecap="round">
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>
+    </svg>
+  </div>
+  <h1 class="display">Practise speaking English.<br>Nobody is listening.</h1>
+  <p class="body" style="margin:16px 0 26px; font-size:17px">
+    A private interview room on your phone. An AI interviewer asks, you answer out loud, and you get honest feedback — in about 4 minutes.
+  </p>
+  <div class="card flat" style="padding:16px">
+    <ul class="ticks">
+      <li>Free, and it works on mobile data</li>
+      <li>Your voice stays on your phone — nothing is recorded</li>
+      <li>3 questions. No one sees you fail</li>
+    </ul>
+  </div>
+  <button class="btn" onclick="Nav.go('s-goal'); Track.ev('start_onboarding')">Start practising</button>
+  <button class="btn text" id="btn-returning" style="margin-top:10px; display:none" onclick="Nav.go('s-home')">I've been here before</button>
+</section>
+
+<!-- ══════════════ 2. GOAL ══════════════ -->
+<section class="screen" id="s-goal">
+  <div class="stepper"><i class="done"></i><i></i><i></i></div>
+  <p class="overline">Step 1 of 3</p>
+  <h2 class="headline" style="margin:6px 0 6px">Why do you want to speak better?</h2>
+  <p class="body" style="margin-bottom:22px">This decides which questions Priya asks you.</p>
+  <div id="goals"></div>
+  <button class="btn" id="go-goal" disabled onclick="Nav.go('s-level')">Continue</button>
+</section>
+
+<!-- ══════════════ 3. LEVEL ══════════════ -->
+<section class="screen" id="s-level">
+  <div class="stepper"><i class="done"></i><i class="done"></i><i></i></div>
+  <p class="overline">Step 2 of 3</p>
+  <h2 class="headline" style="margin:6px 0 6px">Where are you right now?</h2>
+  <p class="body" style="margin-bottom:22px">Be honest. Nobody sees this. It only sets the difficulty.</p>
+  <div id="levels"></div>
+  <button class="btn" id="go-level" disabled onclick="Nav.go('s-perm')">Continue</button>
+</section>
+
+<!-- ══════════════ 4. PERMISSION PRIMER ══════════════ -->
+<section class="screen" id="s-perm">
+  <div class="stepper"><i class="done"></i><i class="done"></i><i class="done"></i></div>
+  <p class="overline">Step 3 of 3</p>
+  <h2 class="headline" style="margin:6px 0 14px">Two quick permissions</h2>
+
+  <div class="card" style="display:flex; gap:14px; align-items:flex-start">
+    <div style="width:44px;height:44px;border-radius:14px;background:var(--primary-container);color:var(--on-primary-container);display:flex;align-items:center;justify-content:center;flex:0 0 auto">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+    </div>
+    <div>
+      <p class="title">Microphone — required</p>
+      <p class="body" style="font-size:14.5px">Your phone turns your speech into text on the device itself. <b>The audio is never uploaded and never saved.</b></p>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex; gap:14px; align-items:flex-start">
+    <div style="width:44px;height:44px;border-radius:14px;background:var(--tertiary-container);color:var(--on-tertiary-container);display:flex;align-items:center;justify-content:center;flex:0 0 auto">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m23 7-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+    </div>
+    <div>
+      <p class="title">Camera — your choice</p>
+      <p class="body" style="font-size:14.5px">Seeing yourself makes it feel like a real interview. You can switch it off any time, and the video never leaves your phone.</p>
+    </div>
+  </div>
+
+  <div class="card out" style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+    <div><p class="title" style="font-size:16px">Turn camera on</p><p class="body" style="font-size:13px">Recommended for interview practice</p></div>
+    <button id="camtoggle" aria-pressed="true" onclick="App.toggleCamPref()" style="width:56px;height:32px;border-radius:16px;border:0;background:var(--primary);position:relative;cursor:pointer;flex:0 0 auto;transition:background .25s">
+      <span style="position:absolute;top:4px;left:28px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .25s var(--ease-spring)"></span>
+    </button>
+  </div>
+
+  <button class="btn" style="margin-top:8px" onclick="App.beginSession()">Allow and start interview</button>
+  <p class="note"><span>🔒</span><span>You can revoke these any time in your browser settings. OutLoud stores your progress only on this phone.</span></p>
+</section>
+
+<!-- ══════════════ 5. INTERVIEW ROOM ══════════════ -->
+<section id="room">
+  <div class="room-top" id="roomtop">
+    <img class="avatar" id="avatar" src="assets/priya.jpg" alt="Priya, your AI interviewer">
+    <div class="veil"></div>
+    <div class="who"><span class="dot"></span><div><b>Priya</b><span>HR Manager · AI interviewer</span></div></div>
+    <div class="qcount" id="qcount"><i></i><i></i><i></i></div>
+    <div class="stack">
+      <div class="aura" id="aura"></div>
+      <div class="caption" id="caption"><span class="qn">Getting ready</span><span id="captxt">Connecting to Priya…</span></div>
+    </div>
+  </div>
+  <div class="room-bottom">
+    <video id="selfcam" autoplay playsinline muted></video>
+    <div class="camoff hidden" id="camoff"><div class="ini" id="ini">You</div><span>Camera is off</span></div>
+    <div class="live empty" id="live">Your words will appear here as you speak…</div>
+    <div class="dock">
+      <button class="icobtn" id="btn-cam" onclick="App.toggleCam()" aria-label="Toggle camera">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m23 7-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      </button>
+      <div class="micwrap">
+        <button class="mic" id="mic" data-state="idle-locked" onclick="App.micTap()" aria-label="Microphone">
+          <span class="ring"></span>
+          <svg id="micicon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+        </button>
+        <small id="micLabel">Listen first</small>
+      </div>
+      <button class="icobtn" id="btn-more" onclick="App.openSheet()" aria-label="More options">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 6. ANALYSING ══════════════ -->
+<section class="screen" id="s-wait">
+  <div style="height:16vh"></div>
+  <div style="display:flex;justify-content:center;margin-bottom:26px">
+    <div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center"><div class="spinner"></div></div>
+  </div>
+  <h2 class="headline" style="text-align:center">Priya is reviewing your answers</h2>
+  <p class="body" style="text-align:center;margin-top:10px" id="waittip">Checking how clearly you explained your ideas…</p>
+</section>
+
+<!-- ══════════════ 7. SCORECARD ══════════════ -->
+<section class="screen" id="s-score">
+  <div class="scorehero">
+    <p style="margin:0 0 4px;font-size:13px;opacity:.85;font-weight:600;letter-spacing:.4px">SPEAKING SCORE</p>
+    <div style="display:flex;align-items:flex-end;gap:8px">
+      <span class="bignum" id="totalScore">0</span><span style="opacity:.7;padding-bottom:10px">/100</span>
+    </div>
+    <p style="margin:10px 0 0;font-size:16px;line-height:1.4;opacity:.95" id="scoreLine">—</p>
+  </div>
+
+  <div class="card">
+    <p class="overline">What you did well</p>
+    <ul class="ticks" id="wins" style="margin-top:12px"></ul>
+  </div>
+
+  <div class="card">
+    <p class="overline" style="margin-bottom:14px">Your speaking breakdown</p>
+    <div id="bars"></div>
+  </div>
+
+  <div class="card" style="background:var(--warn-container); color:var(--on-warn-container)">
+    <p class="overline" style="color:inherit; opacity:.8">One thing to work on</p>
+    <p style="margin:10px 0 0; font-size:16px; line-height:1.45" id="fixText">—</p>
+  </div>
+
+  <div class="card">
+    <p class="overline">Say it better</p>
+    <p class="quote" id="saidIt" style="margin-top:12px">—</p>
+    <div class="better" id="betterIt">—</div>
+    <button class="btn tonal small" style="width:100%;margin-top:12px" onclick="App.hearBetter()">🔊 Hear how it sounds</button>
+  </div>
+
+  <div class="card">
+    <p class="overline" style="margin-bottom:12px">The numbers</p>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <button class="btn" onclick="App.finishToHome()">Save and continue</button>
+</section>
+
+<!-- ══════════════ 8. HOME / RETURN ══════════════ -->
+<section class="screen" id="s-home">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <div><p class="label" style="margin:0">Welcome back</p><h2 class="headline" id="homeGoal">Interview practice</h2></div>
+    <button class="icobtn" style="border-color:var(--outline-variant);background:var(--surface-container);color:var(--on-surface-variant)" onclick="App.openMetrics()" aria-label="Stats">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+    </button>
+  </div>
+
+  <div class="streak">
+    <div class="n" id="streakN">1</div>
+    <div><b style="display:block;font-size:15px">day streak</b><span style="font-size:13.5px;opacity:.8" id="streakSub">Come back tomorrow to keep it</span></div>
+  </div>
+
+  <div class="card tint" style="background:var(--surface-container-low); color:var(--on-surface)">
+    <p class="overline" id="nextTag">Today's session</p>
+    <h3 class="title" style="margin:8px 0 6px" id="nextTitle">Interview round 2</h3>
+    <p class="body" style="font-size:14.5px;margin-bottom:16px" id="nextDesc">3 new questions, about 4 minutes.</p>
+    <button class="btn" onclick="App.beginSession()">Start session</button>
+  </div>
+
+  <div class="card">
+    <p class="overline" style="margin-bottom:6px">Your progress</p>
+    <div id="trend" style="margin:14px 0"></div>
+    <div id="history"></div>
+  </div>
+
+  <button class="btn text" onclick="App.resetAll()">Reset my progress</button>
+</section>
+
+</div>
+
+<!-- ══════════════ BOTTOM SHEET ══════════════ -->
+<div class="sheet" id="sheet" onclick="if(event.target===this)App.closeSheet()">
+  <div class="inner">
+    <div class="grab"></div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
