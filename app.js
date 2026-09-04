@@ -538,6 +538,9 @@ const App = {
     const el = document.getElementById('totalScore');
     let n = 0;
     const t = setInterval(() => { n += Math.max(1, Math.round(fb.total / 22)); if (n >= fb.total) { n = fb.total; clearInterval(t); } el.textContent = n; }, 28);
+    const ring = document.getElementById('scoreRing');
+    const circ = 377;
+    setTimeout(() => { ring.style.strokeDashoffset = circ - (circ * Math.min(100, Math.max(0, fb.total)) / 100); }, 120);
     document.getElementById('scoreLine').textContent = fb.headline;
     document.getElementById('wins').innerHTML = fb.wins.map(w => `<li>${this.esc(w)}</li>`).join('');
     const labels = { fluency: 'Fluency', clarity: 'Clarity', structure: 'Structure', vocabulary: 'Vocabulary' };
@@ -550,10 +553,10 @@ const App = {
     document.getElementById('betterIt').textContent = fb.betterIt;
     const s = fb.stats;
     document.getElementById('stats').innerHTML = `
-      <div class="stat"><b>${s.words}</b><span>words spoken</span></div>
-      <div class="stat"><b>${s.wpm}</b><span>words per minute</span></div>
+      <div class="stat big"><span>words spoken</span><b>${s.words}</b></div>
+      <div class="stat"><b>${s.wpm}</b><span>words / min</span></div>
       <div class="stat"><b>${s.fillers}</b><span>filler words</span></div>
-      <div class="stat"><b>${s.longest}</b><span>longest answer (words)</span></div>`;
+      <div class="stat"><b>${s.longest}</b><span>longest answer</span></div>`;
   },
 
   hearBetter() { Voice.say(this.lastBetter || ''); Track.ev('hear_better'); },
