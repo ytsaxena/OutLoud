@@ -318,7 +318,13 @@ button{font-family:inherit}
 .better{background:var(--success-container); color:var(--on-success-container); border-radius:var(--r-m); padding:14px; font-size:15.5px; line-height:1.45}
 ul.ticks{list-style:none; padding:0; margin:0}
 ul.ticks li{display:flex; gap:10px; margin-bottom:10px; font-size:15px; line-height:1.45}
-ul.ticks li::before{content:"✓"; color:var(--success); font-weight:800; flex:0 0 auto}
+ul.ticks li::before{
+  content:""; display:block; width:18px; height:18px; flex:0 0 auto; margin-top:2px;
+  background:var(--success);
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+}
 
 /* ============ THEME TOGGLE ============ */
 .theme-fab{
@@ -340,8 +346,8 @@ ul.ticks li::before{content:"✓"; color:var(--success); font-weight:800; flex:0
     linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,.16) 100%);
 }
 .badge-lg{box-shadow:0 10px 20px -6px rgba(0,0,0,.25), inset 0 -5px 10px rgba(0,0,0,.12)}
-.badge-lg .emo, .tip-badge span{position:relative; z-index:1; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}
-.icobtn svg, .mic svg, .theme-fab .emo{position:relative; z-index:1}
+.badge-lg svg{position:relative; z-index:1; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}
+.icobtn svg, .mic svg, .theme-fab svg, .tip-badge svg{position:relative; z-index:1}
 
 /* ============ MISC ============ */
 .streak{display:flex; align-items:center; gap:14px; background:var(--primary-container); color:var(--on-primary-container); border-radius:var(--r-xl); padding:18px 20px; margin-bottom:14px; box-shadow:var(--shadow)}
@@ -372,7 +378,7 @@ svg{display:block}
 <section class="screen on" id="s-welcome">
   <div style="height:6vh"></div>
   <div class="badge-lg" style="width:96px;height:96px;border-radius:30px;background:var(--primary-container);display:flex;align-items:center;justify-content:center;margin-bottom:24px">
-    <span class="emo" style="font-size:46px">🎤</span>
+    <svg width="46" height="46" viewBox="0 0 24 24" fill="var(--on-primary-container)"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M17 11a1 1 0 1 0-2 0 3 3 0 0 1-6 0 1 1 0 1 0-2 0 5 5 0 0 0 4 4.9V19H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-3.1A5 5 0 0 0 17 11z"/></svg>
   </div>
   <h1 class="display">Practise speaking English.<br>Nobody is listening.</h1>
   <p class="body" style="margin:16px 0 26px; font-size:17px">
@@ -417,7 +423,7 @@ svg{display:block}
 
   <div class="card" style="display:flex; gap:14px; align-items:flex-start">
     <div class="badge-lg" style="width:44px;height:44px;border-radius:14px;background:var(--primary-container);color:var(--on-primary-container);display:flex;align-items:center;justify-content:center;flex:0 0 auto">
-      <span class="emo" style="font-size:22px">🎤</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--on-primary-container)"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M17 11a1 1 0 1 0-2 0 3 3 0 0 1-6 0 1 1 0 1 0-2 0 5 5 0 0 0 4 4.9V19H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-3.1A5 5 0 0 0 17 11z"/></svg>
     </div>
     <div>
       <p class="title">Microphone — required</p>
@@ -427,7 +433,7 @@ svg{display:block}
 
   <div class="card" style="display:flex; gap:14px; align-items:flex-start">
     <div class="badge-lg" style="width:44px;height:44px;border-radius:14px;background:var(--tertiary-container);color:var(--on-tertiary-container);display:flex;align-items:center;justify-content:center;flex:0 0 auto">
-      <span class="emo" style="font-size:22px">📷</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--on-tertiary-container)"><path d="M3 6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1.4l5.2-3a1 1 0 0 1 1.5.87v9.46a1 1 0 0 1-1.5.87L15 13.6V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"/></svg>
     </div>
     <div>
       <p class="title">Camera — your choice</p>
@@ -443,7 +449,7 @@ svg{display:block}
   </div>
 
   <button class="btn" style="margin-top:8px" onclick="App.beginSession()">Allow and start interview</button>
-  <p class="note"><span>🔒</span><span>You can revoke these any time in your browser settings. OutLoud stores your progress only on this phone.</span></p>
+  <p class="note"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 10V8a6 6 0 0 1 12 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1zm2 0h8V8a4 4 0 0 0-8 0v2z"/></svg></span><span>You can revoke these any time in your browser settings. OutLoud stores your progress only on this phone.</span></p>
 </section>
 
 <!-- ══════════════ 5. INTERVIEW ROOM ══════════════ -->
@@ -518,7 +524,7 @@ svg{display:block}
   </div>
 
   <div class="card tip">
-    <div class="tip-badge"><span>💡</span></div>
+    <div class="tip-badge"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-4 12.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26A7 7 0 0 0 12 2z"/><path d="M9.5 20a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-.5h-5v.5z"/></svg></div>
     <div>
       <p class="overline" style="color:var(--warn)">One thing to work on</p>
       <p style="margin:8px 0 0; font-size:16px; line-height:1.45" id="fixText">—</p>
@@ -529,7 +535,7 @@ svg{display:block}
     <p class="overline">Say it better</p>
     <p class="quote" id="saidIt" style="margin-top:12px">—</p>
     <div class="better" id="betterIt">—</div>
-    <button class="btn tonal small" style="width:100%;margin-top:12px" onclick="App.hearBetter()">🔊 Hear how it sounds</button>
+    <button class="btn tonal small" style="width:100%;margin-top:12px;gap:8px" onclick="App.hearBetter()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 12a4.5 4.5 0 0 0-2-3.74v7.47A4.5 4.5 0 0 0 16.5 12z"/><path d="M14.5 4.6v2.06A7.99 7.99 0 0 1 19 12a7.99 7.99 0 0 1-4.5 7.34v2.06A9.99 9.99 0 0 0 21 12a9.99 9.99 0 0 0-6.5-7.4z"/></svg> Hear how it sounds</button>
   </div>
 
   <div class="card">
@@ -545,7 +551,7 @@ svg{display:block}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
     <div><p class="label" style="margin:0">Welcome back</p><h2 class="headline" id="homeGoal">Interview practice</h2></div>
     <button class="icobtn" style="border-color:var(--outline-variant);background:var(--surface-container);color:var(--on-surface-variant)" onclick="App.openMetrics()" aria-label="Stats">
-      <span class="emo" style="font-size:20px;position:relative;z-index:1">📊</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 20a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4z"/><path d="M11 20a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-2z"/><path d="M18 20a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2z"/></svg>
     </button>
   </div>
 
@@ -571,8 +577,8 @@ svg{display:block}
 </section>
 
 <button class="theme-fab" id="themeFab" onclick="Theme.toggle()" aria-label="Switch to light mode">
-  <span id="themeIcoMoon" class="emo" style="font-size:19px">🌙</span>
-  <span id="themeIcoSun" class="emo hidden" style="font-size:19px">☀️</span>
+  <svg id="themeIcoMoon" width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+  <svg id="themeIcoSun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="hidden"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
 </button>
 
 </div>

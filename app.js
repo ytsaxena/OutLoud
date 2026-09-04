@@ -244,15 +244,23 @@ const Api = {
 };
 
 /* ---------------- content ---------------- */
+const ICO = {
+  briefcase: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  chat: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3v3.5a.5.5 0 0 0 .8.4L12.5 17H20a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4z"/></svg>',
+  trendUp: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/></svg>',
+  bars1: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1" opacity=".3"/><rect x="17" y="4" width="4" height="17" rx="1" opacity=".3"/></svg>',
+  bars2: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1" opacity=".3"/></svg>',
+  bars3: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></svg>'
+};
 const GOALS = [
-  { id: 'job', emo: '💼', t: 'Job interview', s: 'HR and hiring manager questions' },
-  { id: 'work', emo: '🛠️', t: 'Talking at work', s: 'Customers, supervisors, daily updates' },
-  { id: 'confidence', emo: '🌱', t: 'Everyday confidence', s: 'Just speak without freezing up' }
+  { id: 'job', emo: ICO.briefcase, t: 'Job interview', s: 'HR and hiring manager questions' },
+  { id: 'work', emo: ICO.chat, t: 'Talking at work', s: 'Customers, supervisors, daily updates' },
+  { id: 'confidence', emo: ICO.trendUp, t: 'Everyday confidence', s: 'Just speak without freezing up' }
 ];
 const LEVELS = [
-  { id: 'freeze', emo: '😰', t: 'I freeze up', s: 'I know the words but they do not come out' },
-  { id: 'stumble', emo: '😐', t: 'I manage, but I stumble', s: 'I speak, with long pauses and mistakes' },
-  { id: 'polish', emo: '🙂', t: 'I am okay, I want polish', s: 'I want to sound sharper and more confident' }
+  { id: 'freeze', emo: ICO.bars1, t: 'I freeze up', s: 'I know the words but they do not come out' },
+  { id: 'stumble', emo: ICO.bars2, t: 'I manage, but I stumble', s: 'I speak, with long pauses and mistakes' },
+  { id: 'polish', emo: ICO.bars3, t: 'I am okay, I want polish', s: 'I want to sound sharper and more confident' }
 ];
 const BANK = {
   job: [
@@ -707,8 +715,8 @@ const App = {
     document.getElementById('sheetBody').innerHTML = `
       <p class="overline">Interview options</p>
       <div style="height:12px"></div>
-      <button class="btn tonal" style="margin-bottom:10px" onclick="App.repeatQ()">🔁 Repeat the question</button>
-      <button class="btn tonal" style="margin-bottom:10px" onclick="App.skipQ()">⏭️ Skip this question</button>
+      <button class="btn tonal" style="margin-bottom:10px" onclick="App.repeatQ()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4a8 8 0 0 0-6.32 3.09L4.7 6.12A.5.5 0 0 0 4 6.55V10a.5.5 0 0 0 .5.5h3.45a.5.5 0 0 0 .35-.85L6.9 8.24A6 6 0 1 1 6 12H4a8 8 0 1 0 8-8z"/></svg> Repeat the question</button>
+      <button class="btn tonal" style="margin-bottom:10px" onclick="App.skipQ()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5a1 1 0 0 1 1.53-.85l9 6a1 1 0 0 1 0 1.7l-9 6A1 1 0 0 1 6 17V5z"/><rect x="16" y="4" width="2.5" height="14" rx="1"/></svg> Skip this question</button>
       <button class="btn outline" style="margin-bottom:10px" onclick="App.quit()">Leave the interview</button>
       <button class="btn text" onclick="App.closeSheet()">Cancel</button>`;
     document.getElementById('sheet').classList.add('on');
