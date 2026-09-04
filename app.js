@@ -661,6 +661,7 @@ const App = {
 
   paintScore(fb) {
     this.lastBetter = fb.betterIt;
+    this.paintStreakBar('streakBar', 'streakBarN');
     const el = document.getElementById('totalScore');
     let n = 0;
     const t = setInterval(() => { n += Math.max(1, Math.round(fb.total / 22)); if (n >= fb.total) { n = fb.total; clearInterval(t); } el.textContent = n; }, 28);
@@ -690,12 +691,8 @@ const App = {
   finishToHome() { Nav.go('s-home'); },
 
   /* ---------- home ---------- */
-  paintHome() {
-    const d = Store.d, ss = d.sessions;
-    const goalName = (GOALS.find(g => g.id === (d.profile && d.profile.goal)) || GOALS[0]).t;
-    document.getElementById('homeGoal').textContent = goalName;
-
-    // streak
+  streakInfo() {
+    const ss = Store.d.sessions;
     const days = [...new Set(ss.map(s => new Date(s.at).toDateString()))];
     let streak = 0;
     for (let i = 0; i < 60; i++) {
@@ -703,7 +700,31 @@ const App = {
       if (days.includes(d2.toDateString())) streak++;
       else if (i > 0) break;
     }
-    document.getElementById('streakN').textContent = Math.max(streak, ss.length ? 1 : 0);
+    return { days, streak: Math.max(streak, ss.length ? 1 : 0) };
+  },
+
+  paintStreakBar(barId, numId) {
+    const { days, streak } = this.streakInfo();
+    const dow = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    let html = '';
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const done = days.includes(d.toDateString());
+      html += `<div class="d${done ? ' done' : ''}${i === 0 ? ' today' : ''}"><span>${dow[d.getDay()]}</span><i></i></div>`;
+    }
+    const bar = document.getElementById(barId);
+    if (bar) bar.innerHTML = html;
+    const num = document.getElementById(numId);
+    if (num) num.textContent = streak;
+  },
+
+  paintHome() {
+    const d = Store.d, ss = d.sessions;
+    const goalName = (GOALS.find(g => g.id === (d.profile && d.profile.goal)) || GOALS[0]).t;
+    document.getElementById('homeGoal').textContent = goalName;
+
+    const { days, streak } = this.streakInfo();
+    document.getElementById('streakN').textContent = streak;
     const doneToday = days.includes(new Date().toDateString());
     document.getElementById('streakSub').textContent = doneToday ? 'Done for today. Come back tomorrow.' : 'You have not practised today yet.';
 

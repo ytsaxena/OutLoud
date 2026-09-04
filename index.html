@@ -349,6 +349,16 @@ ul.ticks li::before{
 .badge-lg svg{position:relative; z-index:1; display:block; filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}
 .icobtn svg, .mic svg, .theme-fab svg, .tip-badge svg{position:relative; z-index:1}
 
+/* ============ STREAK BAR ============ */
+.streak-num{font-size:28px; font-weight:700; line-height:1; color:var(--primary)}
+.streakbar{display:flex; justify-content:space-between; gap:6px}
+.streakbar .d{display:flex; flex-direction:column; align-items:center; gap:6px; flex:1}
+.streakbar .d span{font-size:11px; color:var(--on-surface-variant); font-weight:600}
+.streakbar .d i{display:block; width:100%; height:34px; border-radius:10px; background:var(--surface-container-highest); font-style:normal}
+.streakbar .d.done i{background:var(--primary)}
+.streakbar .d.today i{box-shadow:0 0 0 2px var(--primary) inset}
+.streakbar .d.today span{color:var(--primary)}
+
 /* ============ TOAST ============ */
 .toast{
   position:fixed; left:50%; bottom:28px; transform:translate(-50%, 20px);
@@ -526,6 +536,14 @@ svg{display:block}
       </div>
     </div>
     <p class="scoreline" id="scoreLine">—</p>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px">
+      <span class="streak-num" id="streakBarN">0</span>
+      <span class="body" style="font-size:13.5px">day streak</span>
+    </div>
+    <div class="streakbar" id="streakBar"></div>
   </div>
 
   <div class="card">
