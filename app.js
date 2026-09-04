@@ -47,6 +47,12 @@ const Track = {
     Store.d.events.push({ n: name, t: Date.now(), m: meta || null });
     if (Store.d.events.length > 400) Store.d.events.splice(0, 100);
     Store.save();
+    try {
+      if (typeof gtag === 'function') {
+        const params = (meta && typeof meta === 'object') ? meta : (meta === undefined || meta === null ? {} : { value: meta });
+        gtag('event', name, params);
+      }
+    } catch (e) {}
   },
   count(name) { return Store.d.events.filter(e => e.n === name).length; }
 };

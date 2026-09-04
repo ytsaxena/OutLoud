@@ -50,3 +50,6 @@ The `/api` function will not run under a plain static server — install the Ver
 
 Audio is transcribed by the phone itself and never uploaded. Camera video never leaves the device.
 Only the **text** of an answer is sent to Gemini, for coaching. Progress is stored in `localStorage` on the device.
+
+The app also sends anonymous usage analytics (Google Analytics) — page views and events like session starts,
+questions answered, skips, and completions. No answer text, scores, or personal data are included.
