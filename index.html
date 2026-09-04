@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#5A4AE3">
 <title>OutLoud — Practise speaking English</title>
 <meta name="description" content="A private AI interview room to practise speaking English out loud. Free, on your phone.">
+<script>
+try {
+  var t = localStorage.getItem('outloud_theme');
+  if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t);
+} catch (e) {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,600;8..144,700&display=swap" rel="stylesheet">
@@ -38,7 +45,7 @@
   color-scheme:light dark;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --primary:#C7BFFF; --on-primary:#291A8C;
     --primary-container:#4032C4; --on-primary-container:#E4DFFF;
     --secondary:#CBC2DB; --secondary-container:#484254; --on-secondary-container:#E8DEF8;
@@ -57,6 +64,45 @@
     --shadow:0 1px 2px rgba(0,0,0,.4);
     --shadow-2:0 8px 28px rgba(0,0,0,.5);
   }
+}
+/* explicit overrides win regardless of system preference — driven by the theme toggle */
+:root[data-theme="dark"]{
+  --primary:#C7BFFF; --on-primary:#291A8C;
+  --primary-container:#4032C4; --on-primary-container:#E4DFFF;
+  --secondary:#CBC2DB; --secondary-container:#484254; --on-secondary-container:#E8DEF8;
+  --tertiary:#EFB8CD; --tertiary-container:#623B4D; --on-tertiary-container:#FFD9E5;
+  --error:#F2B8B5; --error-container:#8C1D18; --on-error-container:#F9DEDC;
+  --success:#A1CFB7; --success-container:#0E4634; --on-success-container:#BCEBD4;
+  --warn:#F2C06B; --warn-container:#5C3D00; --on-warn-container:#FFDFA8;
+  --surface:#141218; --on-surface:#E7E0EA;
+  --surface-container-lowest:#0E0C12;
+  --surface-container-low:#1C1B1F;
+  --surface-container:#211F26;
+  --surface-container-high:#2B2930;
+  --surface-container-highest:#36343B;
+  --on-surface-variant:#CBC4CF;
+  --outline:#948F99; --outline-variant:#49454F;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 8px 28px rgba(0,0,0,.5);
+}
+:root[data-theme="light"]{
+  --primary:#5A4AE3; --on-primary:#FFFFFF;
+  --primary-container:#E4DFFF; --on-primary-container:#180067;
+  --secondary:#605A71; --secondary-container:#E7DEF8; --on-secondary-container:#1D192B;
+  --tertiary:#7C5265; --tertiary-container:#FFD9E5; --on-tertiary-container:#31101F;
+  --error:#B3261E; --error-container:#F9DEDC; --on-error-container:#410E0B;
+  --success:#2A6B4F; --success-container:#BCEBD4; --on-success-container:#08281A;
+  --warn:#8A5A00; --warn-container:#FFDFA8; --on-warn-container:#2A1800;
+  --surface:#FFFFFF; --on-surface:#1C1B1F;
+  --surface-container-lowest:#FFFFFF;
+  --surface-container-low:#F8F6FC;
+  --surface-container:#F2ECF6;
+  --surface-container-high:#ECE6F0;
+  --surface-container-highest:#E6E0E9;
+  --on-surface-variant:#49454F;
+  --outline:#79747E; --outline-variant:#CDC6D3;
+  --shadow:0 1px 2px rgba(0,0,0,.08), 0 2px 10px rgba(60,40,120,.08);
+  --shadow-2:0 4px 10px rgba(60,40,120,.08), 0 12px 28px rgba(60,40,120,.14);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -266,6 +312,17 @@ button{font-family:inherit}
 ul.ticks{list-style:none; padding:0; margin:0}
 ul.ticks li{display:flex; gap:10px; margin-bottom:10px; font-size:15px; line-height:1.45}
 ul.ticks li::before{content:"✓"; color:var(--success); font-weight:800; flex:0 0 auto}
+
+/* ============ THEME TOGGLE ============ */
+.theme-fab{
+  position:fixed; top:calc(env(safe-area-inset-top) + 14px); right:16px; z-index:40;
+  width:42px; height:42px; border-radius:50%; border:1px solid var(--outline-variant);
+  background:var(--surface-container-high); color:var(--on-surface-variant);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:var(--shadow); transition:transform .2s var(--ease-spring), background .2s;
+}
+.theme-fab:active{transform:scale(.9)}
+#room.on ~ .theme-fab{display:none}
 
 /* ============ MISC ============ */
 .streak{display:flex; align-items:center; gap:14px; background:var(--primary-container); color:var(--on-primary-container); border-radius:var(--r-xl); padding:18px 20px; margin-bottom:14px; box-shadow:var(--shadow)}
@@ -495,6 +552,11 @@ svg{display:block}
 
   <button class="btn text" onclick="App.resetAll()">Reset my progress</button>
 </section>
+
+<button class="theme-fab" id="themeFab" onclick="Theme.toggle()" aria-label="Switch to light mode">
+  <svg id="themeIcoMoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+  <svg id="themeIcoSun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+</button>
 
 </div>
 

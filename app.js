@@ -3,6 +3,30 @@
    Browser STT  →  Gemini (via /api/interview)  →  Browser TTS
    ============================================================ */
 
+/* ---------------- theme ---------------- */
+const Theme = {
+  key: 'outloud_theme',
+  get() { try { return localStorage.getItem(this.key); } catch (e) { return null; } },
+  set(v) { try { localStorage.setItem(this.key, v); } catch (e) {} },
+  effective() {
+    const v = this.get();
+    if (v === 'light' || v === 'dark') return v;
+    return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  },
+  apply() {
+    const eff = this.effective();
+    document.documentElement.setAttribute('data-theme', eff);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = eff === 'dark' ? '#141218' : '#5A4AE3';
+    const fab = document.getElementById('themeFab');
+    const moon = document.getElementById('themeIcoMoon'), sun = document.getElementById('themeIcoSun');
+    if (fab) fab.setAttribute('aria-label', eff === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    if (moon && sun) { moon.classList.toggle('hidden', eff === 'dark'); sun.classList.toggle('hidden', eff !== 'dark'); }
+  },
+  toggle() { this.set(this.effective() === 'dark' ? 'light' : 'dark'); this.apply(); Track.ev('theme_toggle', this.effective()); },
+  init() { this.apply(); }
+};
+
 /* ---------------- storage ---------------- */
 const KEY = 'outloud_v1';
 const Store = {
@@ -238,6 +262,7 @@ const App = {
 
   boot() {
     Store.load();
+    Theme.init();
     Voice.init();
     this.camOn = Store.d.camPref !== false;
     this.paintChoices();
