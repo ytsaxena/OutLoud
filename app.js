@@ -59,12 +59,32 @@ const Track = {
 
 /* ---------------- navigation ---------------- */
 const Nav = {
+  names: {
+    's-welcome': 'Welcome', 's-goal': 'Choose goal', 's-level': 'Choose level',
+    's-perm': 'Permissions', 'room': 'Interview room', 's-wait': 'Scoring',
+    's-score': 'Score and feedback', 's-home': 'Home'
+  },
   go(id) {
     document.querySelectorAll('.screen, #room').forEach(s => s.classList.remove('on'));
     const el = document.getElementById(id);
     el.classList.add('on');
     window.scrollTo(0, 0);
     if (id === 's-home') App.paintHome();
+    this.track(id);
+  },
+  // GA4 has no notion of screen changes in a single-page app — send a
+  // virtual page_view per screen so "Pages and screens" / exit rate
+  // shows which step users actually left from.
+  track(id) {
+    try {
+      if (typeof gtag !== 'function') return;
+      const name = this.names[id] || id;
+      gtag('event', 'page_view', {
+        page_title: 'OutLoud — ' + name,
+        page_location: location.origin + location.pathname + '#' + id,
+        page_path: location.pathname + '#' + id
+      });
+    } catch (e) {}
   }
 };
 
@@ -281,6 +301,8 @@ const App = {
     if (Store.d.sessions.length) {
       document.getElementById('btn-returning').style.display = '';
       Nav.go('s-home');
+    } else {
+      Nav.track('s-welcome');
     }
     Track.ev('app_open');
     document.addEventListener('visibilitychange', () => { if (document.hidden) Voice.stop(); });
