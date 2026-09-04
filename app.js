@@ -17,7 +17,7 @@ const Theme = {
     const eff = this.effective();
     document.documentElement.setAttribute('data-theme', eff);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = eff === 'dark' ? '#141218' : '#5A4AE3';
+    if (meta) meta.content = eff === 'dark' ? '#141912' : '#3B6D11';
     const fab = document.getElementById('themeFab');
     const moon = document.getElementById('themeIcoMoon'), sun = document.getElementById('themeIcoSun');
     if (fab) fab.setAttribute('aria-label', eff === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
