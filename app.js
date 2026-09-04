@@ -66,8 +66,16 @@ const Voice = {
     speechSynthesis.onvoiceschanged = pick;
   },
   // call once from inside a user-gesture handler (e.g. session start) so
-  // the shared <audio> element is allowed to autoplay later on mobile
-  unlock() { try { this.audioEl.play().catch(() => {}); this.audioEl.pause(); } catch (e) {} },
+  // the shared <audio> element is allowed to autoplay later on mobile.
+  // Must actually play a real (if silent) clip — playing an empty/srcless
+  // element does not register as activation on strict mobile browsers.
+  unlock() {
+    try {
+      this.audioEl.src = 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA==';
+      const p = this.audioEl.play();
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) {}
+  },
   async say(text) {
     if (await this.sayNatural(text)) return;
     return this.sayBrowser(text);
