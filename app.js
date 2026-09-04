@@ -815,7 +815,10 @@ const App = {
     this.closeSheet();
     Voice.stop();
     Track.ev('skip_question');
-    if (Ears.active) { Ears.stop(); return; }
+    // suppress the pending onDone callback so stopping the mic doesn't fall
+    // through to answered(), which would treat the empty capture as a
+    // garbled answer and speak a "could not hear you" retry prompt
+    if (Ears.active) { Ears.onDone = null; Ears.stop(); }
     this.answers.push({ q: this.qs[this.idx], a: '', secs: 1 });
     if (this.idx < 2) this.ask(this.idx + 1); else this.endSession();
   },
