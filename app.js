@@ -57,6 +57,64 @@ const Track = {
   count(name) { return Store.d.events.filter(e => e.n === name).length; }
 };
 
+/* ---------------- toast ---------------- */
+const Toast = {
+  t: null,
+  show(msg, ms) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('on');
+    clearTimeout(this.t);
+    this.t = setTimeout(() => el.classList.remove('on'), ms || 2600);
+  }
+};
+
+/* ---------------- auth ---------------- */
+const Auth = {
+  user: null,
+  init() {
+    if (!window.FirebaseAuth) { setTimeout(() => this.init(), 50); return; }
+    window.FirebaseAuth.onChange(u => { this.user = u; this.paintIdentity(); });
+  },
+  signInGoogle() {
+    if (!window.FirebaseAuth) { Toast.show('Still loading — try again in a second.'); return; }
+    Track.ev('signin_attempt', 'google');
+    window.FirebaseAuth.signIn()
+      .then(user => {
+        Track.ev('signin_success', 'google');
+        Toast.show('Signed in as ' + (user.displayName || user.email || 'you') + '.');
+        Nav.go('s-goal');
+      })
+      .catch(err => {
+        if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) return;
+        Track.ev('signin_error', (err && err.code) || 'unknown');
+        Toast.show('Could not sign in with Google. Please try again.');
+      });
+  },
+  continueGuest() {
+    Track.ev('continue_guest');
+    Nav.go('s-goal');
+  },
+  signOut() {
+    if (!window.FirebaseAuth || !this.user) return;
+    window.FirebaseAuth.signOut().then(() => {
+      Track.ev('signout');
+      Toast.show('Signed out.');
+    });
+  },
+  paintIdentity() {
+    const el = document.getElementById('identityChip');
+    if (!el) return;
+    if (this.user) {
+      el.style.display = '';
+      el.textContent = 'Signed in as ' + (this.user.displayName || this.user.email || 'you') + ' — tap to sign out';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+};
+
 /* ---------------- navigation ---------------- */
 const Nav = {
   names: {
@@ -302,6 +360,7 @@ const App = {
   boot() {
     Store.load();
     Theme.init();
+    Auth.init();
     Voice.init();
     this.camOn = Store.d.camPref !== false;
     this.paintChoices();
