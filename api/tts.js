@@ -22,8 +22,9 @@ export default async function handler(req, res) {
         text,
         language_code: 'en-IN',
         model: 'bulbul:v3',
-        speaker: 'priya',
-        pace: 0.95
+        speaker: 'ritu',
+        pace: 0.85,
+        temperature: 0.35
       })
     });
 
