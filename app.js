@@ -64,7 +64,7 @@ const Nav = {
 
 /* ---------------- text to speech ---------------- */
 const Voice = {
-  voice: null, ready: false, audioEl: null,
+  voice: null, ready: false, audioEl: null, gen: 0,
   init() {
     this.audioEl = new Audio();
     if (!('speechSynthesis' in window)) return;
@@ -101,10 +101,12 @@ const Voice = {
     } catch (e) {}
   },
   async say(text) {
-    if (await this.sayNatural(text)) return;
-    return this.sayBrowser(text);
+    const my = ++this.gen;
+    if (await this.sayNatural(text, my)) return;
+    if (my !== this.gen) return; // superseded (skip/repeat/quit) while the fetch was in flight
+    return this.sayBrowser(text, my);
   },
-  sayNatural(text) {
+  sayNatural(text, my) {
     return fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -112,6 +114,7 @@ const Voice = {
     })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(j => new Promise(res => {
+        if (my !== this.gen) { res(true); return; } // stale — a newer say()/stop() has already superseded this one
         const a = this.audioEl;
         let done = false;
         const fin = ok => { if (done) return; done = true; clearTimeout(guard); a.onended = a.onerror = null; res(ok); };
@@ -123,8 +126,9 @@ const Voice = {
       }))
       .catch(() => false);
   },
-  sayBrowser(text) {
+  sayBrowser(text, my) {
     return new Promise(res => {
+      if (my !== this.gen) { res(); return; }
       if (!('speechSynthesis' in window)) { setTimeout(res, Math.min(6000, text.length * 55)); return; }
       try { speechSynthesis.cancel(); } catch (e) {}
       const u = new SpeechSynthesisUtterance(text);
@@ -139,6 +143,7 @@ const Voice = {
     });
   },
   stop() {
+    this.gen++; // invalidate any in-flight say() calls so they can't hijack playback later
     try { speechSynthesis.cancel(); } catch (e) {}
     try { this.audioEl.pause(); } catch (e) {}
   }
@@ -380,7 +385,7 @@ const App = {
     document.getElementById('roomtop').classList.add('speaking');
     await Voice.say(q);
     document.getElementById('roomtop').classList.remove('speaking');
-    if (this.aborted) return;
+    if (this.aborted || this.idx !== i) return; // a newer ask()/skip/repeat superseded this one while awaiting
     this.listen();
   },
 
@@ -413,13 +418,14 @@ const App = {
     Track.ev('answer_done', { q: this.idx + 1, words: txt.split(/\s+/).filter(Boolean).length, secs });
     this.micState('thinking', 'Got it');
     document.getElementById('qcount').children[this.idx].className = 'done';
+    const answeredIdx = this.idx;
 
-    if (this.idx < 2) {
+    if (answeredIdx < 2) {
       document.getElementById('roomtop').classList.add('speaking');
-      await Voice.say(ACKS[this.idx % ACKS.length]);
+      await Voice.say(ACKS[answeredIdx % ACKS.length]);
       document.getElementById('roomtop').classList.remove('speaking');
-      if (this.aborted) return;
-      this.ask(this.idx + 1);
+      if (this.aborted || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the ack was speaking
+      this.ask(answeredIdx + 1);
     } else {
       document.getElementById('roomtop').classList.add('speaking');
       await Voice.say('That is the end of the interview. Well done for finishing. Let me give you your feedback.');
@@ -683,6 +689,7 @@ const App = {
 
   async repeatQ() {
     this.closeSheet();
+    Voice.stop();
     if (Ears.active) Ears.stop();
     Track.ev('repeat_question');
     await this.sleep(200);
@@ -690,6 +697,7 @@ const App = {
   },
   skipQ() {
     this.closeSheet();
+    Voice.stop();
     Track.ev('skip_question');
     if (Ears.active) { Ears.stop(); return; }
     this.answers.push({ q: this.qs[this.idx], a: '', secs: 1 });
