@@ -13,6 +13,7 @@ An AI speaking coach for people who read and write English well but freeze when 
    |---|---|
    | `GEMINI_API_KEY` | your key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — it starts with `AIza` |
    | `GEMINI_MODEL` | `gemini-3.5-flash-lite` (optional) |
+   | `SARVAM_API_KEY` | your key from [dashboard.sarvam.ai](https://dashboard.sarvam.ai) — powers Priya's natural voice (falls back to the robotic browser voice if unset) |
 
 4. Deploy. Open the HTTPS URL on your phone in **Chrome**.
 
@@ -29,6 +30,7 @@ If the questions you hear are always the same three, the API call is failing and
 index.html          all screens and the Material Design 3 system
 app.js              speech, session flow, scoring, metrics
 api/interview.js    Gemini proxy — the API key lives here, server-side only
+api/tts.js           Sarvam (Bulbul) proxy — turns Priya's lines into natural speech, server-side only
 assets/priya.jpg    the interviewer
 vercel.json         permissions policy for mic/camera + asset caching
 BUILD_LOG.md        what broke and how it was worked around

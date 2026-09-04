@@ -40,8 +40,9 @@ const Nav = {
 
 /* ---------------- text to speech ---------------- */
 const Voice = {
-  voice: null, ready: false,
+  voice: null, ready: false, audioEl: null,
   init() {
+    this.audioEl = new Audio();
     if (!('speechSynthesis' in window)) return;
     const pick = () => {
       const vs = speechSynthesis.getVoices();
@@ -64,7 +65,33 @@ const Voice = {
     pick();
     speechSynthesis.onvoiceschanged = pick;
   },
-  say(text) {
+  // call once from inside a user-gesture handler (e.g. session start) so
+  // the shared <audio> element is allowed to autoplay later on mobile
+  unlock() { try { this.audioEl.play().catch(() => {}); this.audioEl.pause(); } catch (e) {} },
+  async say(text) {
+    if (await this.sayNatural(text)) return;
+    return this.sayBrowser(text);
+  },
+  sayNatural(text) {
+    return fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(j => new Promise(res => {
+        const a = this.audioEl;
+        let done = false;
+        const fin = ok => { if (done) return; done = true; clearTimeout(guard); a.onended = a.onerror = null; res(ok); };
+        const guard = setTimeout(() => fin(true), Math.max(4000, text.length * 90));
+        a.onended = () => fin(true);
+        a.onerror = () => fin(false);
+        a.src = 'data:audio/' + (j.codec || 'wav') + ';base64,' + j.audio;
+        a.play().catch(() => fin(false));
+      }))
+      .catch(() => false);
+  },
+  sayBrowser(text) {
     return new Promise(res => {
       if (!('speechSynthesis' in window)) { setTimeout(res, Math.min(6000, text.length * 55)); return; }
       try { speechSynthesis.cancel(); } catch (e) {}
@@ -79,7 +106,10 @@ const Voice = {
       try { speechSynthesis.speak(u); } catch (e) { fin(); }
     });
   },
-  stop() { try { speechSynthesis.cancel(); } catch (e) {} }
+  stop() {
+    try { speechSynthesis.cancel(); } catch (e) {}
+    try { this.audioEl.pause(); } catch (e) {}
+  }
 };
 
 /* ---------------- speech to text ---------------- */
@@ -256,8 +286,9 @@ const App = {
     this.aborted = false; this.answers = []; this.idx = 0; this.sessionStart = Date.now();
     Track.ev('session_start');
 
-    // unlock speech synthesis on Android (needs a user gesture)
+    // unlock speech synthesis / audio playback on mobile (needs a user gesture)
     try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+    Voice.unlock();
 
     if (!Ears.supported()) {
       this.fatal('This browser cannot listen', 'OutLoud needs speech recognition, which works in Chrome on Android and Safari on iPhone. Please open this link in Chrome.');
