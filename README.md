@@ -13,7 +13,7 @@ An AI speaking coach for people who read and write English well but freeze when 
    |---|---|
    | `GEMINI_API_KEY` | your key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — it starts with `AIza` |
    | `GEMINI_MODEL` | `gemini-3.5-flash-lite` (optional) |
-   | `SARVAM_API_KEY` | your key from [dashboard.sarvam.ai](https://dashboard.sarvam.ai) — powers Priya's natural voice (falls back to the robotic browser voice if unset) |
+   | `SARVAM_API_KEY` | your key from [dashboard.sarvam.ai](https://dashboard.sarvam.ai) — powers Priya's natural voice via Bulbul v3 (falls back to the robotic browser voice if unset) |
 
 4. Deploy. Open the HTTPS URL on your phone in **Chrome**.
 

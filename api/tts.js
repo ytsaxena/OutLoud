@@ -21,10 +21,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         text,
         language_code: 'en-IN',
-        model: 'bulbul:v2',
-        speaker: 'anushka',
-        pace: 0.95,
-        enable_preprocessing: true
+        model: 'bulbul:v3',
+        speaker: 'priya',
+        pace: 0.95
       })
     });
 
