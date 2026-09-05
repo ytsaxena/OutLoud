@@ -76,21 +76,24 @@ const Auth = {
   init() {
     if (!window.FirebaseAuth) { setTimeout(() => this.init(), 50); return; }
     window.FirebaseAuth.onChange(u => { this.user = u; this.paintIdentity(); });
+    // picks up the result after signInGoogle() redirects away and back;
+    // resolves to null on any normal page load that wasn't a redirect return
+    window.FirebaseAuth.checkRedirect()
+      .then(result => {
+        if (!result || !result.user) return;
+        Track.ev('signin_success', 'google');
+        Toast.show('Signed in as ' + (result.user.displayName || result.user.email || 'you') + '.');
+        Nav.go('s-goal');
+      })
+      .catch(err => {
+        Track.ev('signin_error', (err && err.code) || 'unknown');
+        Toast.show('Could not sign in with Google. Please try again.');
+      });
   },
   signInGoogle() {
     if (!window.FirebaseAuth) { Toast.show('Still loading — try again in a second.'); return; }
     Track.ev('signin_attempt', 'google');
-    window.FirebaseAuth.signIn()
-      .then(user => {
-        Track.ev('signin_success', 'google');
-        Toast.show('Signed in as ' + (user.displayName || user.email || 'you') + '.');
-        Nav.go('s-goal');
-      })
-      .catch(err => {
-        if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) return;
-        Track.ev('signin_error', (err && err.code) || 'unknown');
-        Toast.show('Could not sign in with Google. Please try again.');
-      });
+    window.FirebaseAuth.signIn(); // navigates away; result handled in init() on return
   },
   continueGuest() {
     Track.ev('continue_guest');

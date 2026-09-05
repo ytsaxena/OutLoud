@@ -632,7 +632,7 @@ svg{display:block}
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -647,10 +647,14 @@ svg{display:block}
   const auth = getAuth(fbApp);
   const provider = new GoogleAuthProvider();
 
+  // Popups are blocked too often on mobile browsers (this app's whole
+  // audience) — use a redirect instead. signIn() navigates away; the
+  // result is picked up by checkRedirect() when the page reloads.
   window.FirebaseAuth = {
-    signIn: () => signInWithPopup(auth, provider).then(r => r.user),
+    signIn: () => signInWithRedirect(auth, provider),
     signOut: () => signOut(auth),
-    onChange: cb => onAuthStateChanged(auth, cb)
+    onChange: cb => onAuthStateChanged(auth, cb),
+    checkRedirect: () => getRedirectResult(auth)
   };
 </script>
 <script defer src="app.js"></script>
