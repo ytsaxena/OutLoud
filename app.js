@@ -149,7 +149,7 @@ const Nav = {
 
 /* ---------------- text to speech ---------------- */
 const Voice = {
-  voice: null, ready: false, audioEl: null, gen: 0,
+  voice: null, ready: false, audioEl: null, gen: 0, cache: {},
   init() {
     this.audioEl = new Audio();
     if (!('speechSynthesis' in window)) return;
@@ -185,6 +185,16 @@ const Voice = {
       if (p && p.catch) p.catch(() => {});
     } catch (e) {}
   },
+  // fire-and-forget: warms the cache so a later say() with the exact same
+  // text plays instantly instead of waiting on a fresh fetch
+  prefetch(text) {
+    if (!text || this.cache[text]) return;
+    this.cache[text] = fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    }).then(r => r.ok ? r.json() : Promise.reject());
+  },
   async say(text) {
     const my = ++this.gen;
     if (await this.sayNatural(text, my)) return;
@@ -192,12 +202,14 @@ const Voice = {
     return this.sayBrowser(text, my);
   },
   sayNatural(text, my) {
-    return fetch('/api/tts', {
+    const pending = this.cache[text];
+    delete this.cache[text]; // one-shot — don't replay stale audio if the same line is said again later
+    const req = pending || fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
-    })
-      .then(r => r.ok ? r.json() : Promise.reject())
+    }).then(r => r.ok ? r.json() : Promise.reject());
+    return req
       .then(j => new Promise(res => {
         if (my !== this.gen) { res(true); return; } // stale — a newer say()/stop() has already superseded this one
         const a = this.audioEl;
@@ -345,6 +357,7 @@ const ACKS = [
   'Alright, noted. Next question.',
   'That helps, thank you.'
 ];
+const CLOSING_LINE = 'That is the end of the interview. Well done for finishing. Let me give you your feedback.';
 const TIPS = [
   'Checking how clearly you explained your ideas…',
   'Looking at the structure of your answers…',
@@ -450,6 +463,9 @@ const App = {
     this.setCaption('Getting ready', 'Priya is preparing your questions…');
     this.qs = await this.getQuestions();
     Track.ev('questions_ready');
+    // warm the small, fixed set of acknowledgment lines while the greeting
+    // plays, so the post-answer transitions never wait on a fresh fetch
+    ACKS.forEach(a => Voice.prefetch(a));
     await this.sleep(400);
     await Voice.say(`Hello. I am Priya. This is a short practice interview, only three questions. Take your time, and answer out loud.`);
     this.ask(0);
@@ -493,6 +509,9 @@ const App = {
       txt => this.setLive(txt),
       (txt, secs, reason) => this.answered(txt, secs, reason)
     );
+    // warm the next line's audio while the user is still talking, so the
+    // ack/next-question transition plays without a fetch delay
+    Voice.prefetch(this.idx < 2 ? this.qs[this.idx + 1] : CLOSING_LINE);
   },
 
   async answered(txt, secs, reason) {
@@ -524,7 +543,7 @@ const App = {
       this.ask(answeredIdx + 1);
     } else {
       document.getElementById('roomtop').classList.add('speaking');
-      await Voice.say('That is the end of the interview. Well done for finishing. Let me give you your feedback.');
+      await Voice.say(CLOSING_LINE);
       document.getElementById('roomtop').classList.remove('speaking');
       this.endSession();
     }
