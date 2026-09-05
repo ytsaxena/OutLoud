@@ -86,8 +86,9 @@ const Auth = {
         Nav.go('s-goal');
       })
       .catch(err => {
-        Track.ev('signin_error', (err && err.code) || 'unknown');
-        Toast.show('Could not sign in with Google. Please try again.');
+        const code = (err && err.code) || 'unknown';
+        Track.ev('signin_error', code);
+        Toast.show('Sign-in failed: ' + code, 5000);
       });
   },
   signInGoogle() {
@@ -95,8 +96,9 @@ const Auth = {
     Track.ev('signin_attempt', 'google');
     // navigates away on success; only rejects here if it fails before that happens
     window.FirebaseAuth.signIn().catch(err => {
-      Track.ev('signin_error', (err && err.code) || 'unknown');
-      Toast.show('Could not sign in with Google. Please try again.');
+      const code = (err && err.code) || 'unknown';
+      Track.ev('signin_error', code);
+      Toast.show('Sign-in failed: ' + code, 5000);
     });
   },
   continueGuest() {
@@ -866,7 +868,7 @@ window.addEventListener('unhandledrejection', e => {
   if (typeof code === 'string' && code.indexOf('auth/') === 0) {
     e.preventDefault();
     Track.ev('signin_error', code);
-    Toast.show('Could not sign in with Google. Please try again.');
+    Toast.show('Sign-in failed: ' + code, 5000);
   }
 });
 
