@@ -99,6 +99,19 @@ const Auth = {
       Toast.show('Sign-in failed: ' + code, 5000);
       try { sessionStorage.removeItem('outloud_signing_in'); } catch (e) {}
     });
+    // diagnostic: if we came back from a redirect attempt but neither the
+    // success path (onChange) nor the error path (checkRedirect) fired
+    // within a few seconds, something failed silently — report that instead
+    // of leaving the user with zero feedback
+    setTimeout(() => {
+      let stillPending = false;
+      try { stillPending = sessionStorage.getItem('outloud_signing_in') === '1'; } catch (e) {}
+      if (stillPending) {
+        try { sessionStorage.removeItem('outloud_signing_in'); } catch (e) {}
+        Track.ev('signin_error', 'silent_no_result');
+        Toast.show('Sign-in did not complete (no error, no account detected). This may be a browser privacy setting blocking cross-site sign-in.', 7000);
+      }
+    }, 3000);
   },
   signInGoogle() {
     if (!window.FirebaseAuth) { Toast.show('Still loading — try again in a second.'); return; }
