@@ -858,4 +858,16 @@ const App = {
   sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 };
 
+// safety net: some Firebase Auth SDK internals reject a promise that
+// never reaches our own .catch() handlers (e.g. a pre-flight config
+// check during signInWithRedirect) — surface it instead of failing silently
+window.addEventListener('unhandledrejection', e => {
+  const code = e && e.reason && e.reason.code;
+  if (typeof code === 'string' && code.indexOf('auth/') === 0) {
+    e.preventDefault();
+    Track.ev('signin_error', code);
+    Toast.show('Could not sign in with Google. Please try again.');
+  }
+});
+
 App.boot();
