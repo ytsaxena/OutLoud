@@ -75,55 +75,23 @@ const Auth = {
   user: null,
   init() {
     if (!window.FirebaseAuth) { setTimeout(() => this.init(), 50); return; }
-    window.FirebaseAuth.onChange(u => {
-      this.user = u;
-      this.paintIdentity();
-      // getRedirectResult() can resolve to null even right after a real
-      // redirect return (the SDK sometimes treats it as already consumed
-      // by the time we check) — so track the attempt ourselves and react
-      // to the actual auth-state change instead of relying on it alone
-      let justSignedIn = false;
-      try { justSignedIn = sessionStorage.getItem('outloud_signing_in') === '1'; } catch (e) {}
-      if (u && justSignedIn) {
-        try { sessionStorage.removeItem('outloud_signing_in'); } catch (e) {}
-        Track.ev('signin_success', 'google');
-        Toast.show('Signed in as ' + (u.displayName || u.email || 'you') + '.');
-        Nav.go('s-goal');
-      }
-    });
-    // still worth awaiting for error detection (e.g. auth/unauthorized-domain
-    // surfaces here before any user object would ever exist)
-    window.FirebaseAuth.checkRedirect().catch(err => {
-      const code = (err && err.code) || 'unknown';
-      Track.ev('signin_error', code);
-      Toast.show('Sign-in failed: ' + code, 5000);
-      try { sessionStorage.removeItem('outloud_signing_in'); } catch (e) {}
-    });
-    // diagnostic: if we came back from a redirect attempt but neither the
-    // success path (onChange) nor the error path (checkRedirect) fired
-    // within a few seconds, something failed silently — report that instead
-    // of leaving the user with zero feedback
-    setTimeout(() => {
-      let stillPending = false;
-      try { stillPending = sessionStorage.getItem('outloud_signing_in') === '1'; } catch (e) {}
-      if (stillPending) {
-        try { sessionStorage.removeItem('outloud_signing_in'); } catch (e) {}
-        Track.ev('signin_error', 'silent_no_result');
-        Toast.show('Sign-in did not complete (no error, no account detected). This may be a browser privacy setting blocking cross-site sign-in.', 7000);
-      }
-    }, 3000);
+    window.FirebaseAuth.onChange(u => { this.user = u; this.paintIdentity(); });
   },
   signInGoogle() {
     if (!window.FirebaseAuth) { Toast.show('Still loading — try again in a second.'); return; }
     Track.ev('signin_attempt', 'google');
-    try { sessionStorage.setItem('outloud_signing_in', '1'); } catch (e) {}
-    // navigates away on success; only rejects here if it fails before that happens
-    window.FirebaseAuth.signIn().catch(err => {
-      const code = (err && err.code) || 'unknown';
-      Track.ev('signin_error', code);
-      Toast.show('Sign-in failed: ' + code, 5000);
-      try { sessionStorage.removeItem('outloud_signing_in'); } catch (e) {}
-    });
+    window.FirebaseAuth.signIn()
+      .then(user => {
+        Track.ev('signin_success', 'google');
+        Toast.show('Signed in as ' + (user.displayName || user.email || 'you') + '.');
+        Nav.go('s-goal');
+      })
+      .catch(err => {
+        if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) return;
+        const code = (err && err.code) || 'unknown';
+        Track.ev('signin_error', code);
+        Toast.show('Sign-in failed: ' + code, 5000);
+      });
   },
   continueGuest() {
     Track.ev('continue_guest');

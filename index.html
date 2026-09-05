@@ -632,7 +632,7 @@ svg{display:block}
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut }
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -647,14 +647,16 @@ svg{display:block}
   const auth = getAuth(fbApp);
   const provider = new GoogleAuthProvider();
 
-  // Popups are blocked too often on mobile browsers (this app's whole
-  // audience) — use a redirect instead. signIn() navigates away; the
-  // result is picked up by checkRedirect() when the page reloads.
+  // Redirect mode requires the authDomain (outloud-96035.firebaseapp.com)
+  // to hand the result back to this app's real domain via shared browser
+  // storage across those two origins — which modern phone browsers
+  // (Safari ITP, Chrome storage partitioning) block, so it silently never
+  // completes. Popup avoids this: it talks back via postMessage between
+  // windows, not shared storage.
   window.FirebaseAuth = {
-    signIn: () => signInWithRedirect(auth, provider),
+    signIn: () => signInWithPopup(auth, provider).then(r => r.user),
     signOut: () => signOut(auth),
-    onChange: cb => onAuthStateChanged(auth, cb),
-    checkRedirect: () => getRedirectResult(auth)
+    onChange: cb => onAuthStateChanged(auth, cb)
   };
 </script>
 <script defer src="app.js"></script>
