@@ -93,7 +93,11 @@ const Auth = {
   signInGoogle() {
     if (!window.FirebaseAuth) { Toast.show('Still loading — try again in a second.'); return; }
     Track.ev('signin_attempt', 'google');
-    window.FirebaseAuth.signIn(); // navigates away; result handled in init() on return
+    // navigates away on success; only rejects here if it fails before that happens
+    window.FirebaseAuth.signIn().catch(err => {
+      Track.ev('signin_error', (err && err.code) || 'unknown');
+      Toast.show('Could not sign in with Google. Please try again.');
+    });
   },
   continueGuest() {
     Track.ev('continue_guest');
