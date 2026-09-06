@@ -446,10 +446,11 @@ const App = {
     try {
       const want = { audio: true, video: this.camOn ? { facingMode: 'user', width: { ideal: 640 } } : false };
       this.stream = await navigator.mediaDevices.getUserMedia(want);
+      this.releaseMicTrack();
       Track.ev('perm_granted', this.camOn ? 'mic+cam' : 'mic');
     } catch (e) {
       if (this.camOn) {
-        try { this.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); this.camOn = false; Track.ev('perm_granted', 'mic'); }
+        try { this.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); this.releaseMicTrack(); this.camOn = false; Track.ev('perm_granted', 'mic'); }
         catch (e2) { Track.ev('perm_denied'); this.fatal('Microphone blocked', 'OutLoud cannot hear you without the microphone. Tap the lock icon in your address bar, allow the microphone, then reload.'); return; }
       } else {
         Track.ev('perm_denied');
@@ -851,6 +852,13 @@ const App = {
   },
 
   stopMedia() { if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; } },
+  // the getUserMedia audio track is only ever needed to get mic permission
+  // granted alongside the camera in one prompt — it's never read or played.
+  // Leaving it open for the whole session holds the mic hardware, which on
+  // Android Chrome blocks the separate system speech-recognition engine
+  // ("Speech Recognition and Synthesis from Google cannot record now...").
+  // Stop it immediately so Ears.start() can actually claim the mic later.
+  releaseMicTrack() { if (this.stream) this.stream.getAudioTracks().forEach(t => t.stop()); },
 
   fatal(title, msg) {
     document.getElementById('sheetBody').innerHTML =
