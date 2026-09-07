@@ -466,7 +466,11 @@ const App = {
     Track.ev('questions_ready');
     // warm the small, fixed set of acknowledgment lines while the greeting
     // plays, so the post-answer transitions never wait on a fresh fetch
-    ACKS.forEach(a => Voice.prefetch(a));
+    // only ACKS[0] and ACKS[1] are ever reachable in a 3-question session
+    // (answeredIdx is only 0 or 1 when an ack plays) — ACKS[2]/[3] would
+    // just be fetched and thrown away unused, wasting Sarvam credits
+    Voice.prefetch(ACKS[0]);
+    Voice.prefetch(ACKS[1]);
     await this.sleep(400);
     await Voice.say(`Hello. I am Priya. This is a short practice interview, only three questions. Take your time, and answer out loud.`);
     this.ask(0);
