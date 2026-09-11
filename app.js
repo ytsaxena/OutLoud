@@ -454,7 +454,7 @@ const App = {
       Store.d.profile = { goal: this.sel.goal || 'job', level: this.sel.level || 'stumble' };
       Store.save();
     }
-    this.aborted = false; this.answers = []; this.idx = 0; this.sessionStart = Date.now();
+    this.aborted = false; this.answers = []; this.idx = 0; this.sessionStart = Date.now(); this._ended = false;
     Track.ev('session_start');
 
     // unlock speech synthesis / audio playback on mobile (needs a user gesture)
@@ -546,6 +546,7 @@ const App = {
 
   async answered(txt, secs, reason) {
     if (this.aborted) return;
+    const startedIdx = this.idx;
     if (reason === 'unsupported' || reason === 'failed') {
       this.micState('ready', 'Tap to try again');
       this.setLive('');
@@ -555,7 +556,7 @@ const App = {
       // too short — nudge once, then move on
       this.micState('idle-locked', 'Priya is speaking');
       await Voice.say('I could not hear you clearly. Take a breath, and try answering once more.');
-      if (this.aborted) return;
+      if (this.aborted || this.idx !== startedIdx) return; // superseded by a skip/repeat while the retry line was speaking
       if (!this._retried) { this._retried = true; this.listen(); return; }
     }
     this._retried = false;
@@ -575,6 +576,7 @@ const App = {
       document.getElementById('roomtop').classList.add('speaking');
       await Voice.say(CLOSING_LINE);
       document.getElementById('roomtop').classList.remove('speaking');
+      if (this.aborted || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the closing line was speaking — endSession() already ran
       this.endSession();
     }
   },
@@ -629,6 +631,12 @@ const App = {
 
   /* ---------- evaluation ---------- */
   async endSession() {
+    // endSession() never changes this.idx, so a stale answered() call and a
+    // genuine skipQ() call on the last question can't be told apart by idx
+    // alone — both would call this with the same idx, double-rendering the
+    // score screen and double-billing the Gemini evaluate call. Guard directly.
+    if (this._ended) return;
+    this._ended = true;
     Nav.go('s-wait');
     this.stopMedia();
     let i = 0;
