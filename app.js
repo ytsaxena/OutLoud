@@ -767,13 +767,13 @@ const App = {
     const label = btn && btn.querySelector('.hear-label');
     Track.ev('hear_better', i + 1);
     if (btn) btn.disabled = true;
-    if (icon) icon.style.visibility = 'hidden';
+    if (icon) icon.style.display = 'none'; // remove from layout, not just hide, so the spinner centers properly
     if (label) label.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(0,0,0,.25);border-top-color:currentColor;vertical-align:-2px"></span> Loading…';
     try {
       await Voice.say((this.lastBetters && this.lastBetters[i]) || '');
     } finally {
       if (btn) btn.disabled = false;
-      if (icon) icon.style.visibility = '';
+      if (icon) icon.style.display = '';
       if (label) label.textContent = 'Hear how it sounds';
     }
   },
