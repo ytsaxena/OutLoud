@@ -454,7 +454,7 @@ const App = {
       Store.d.profile = { goal: this.sel.goal || 'job', level: this.sel.level || 'stumble' };
       Store.save();
     }
-    this.aborted = false; this.answers = []; this.idx = 0; this.sessionStart = Date.now(); this._ended = false; this.askGen = 0;
+    this.aborted = false; this.answers = []; this.idx = 0; this.sessionStart = Date.now(); this._ended = false; this.askGen = 0; this.questionsReady = false;
     Track.ev('session_start');
 
     // unlock speech synthesis / audio playback on mobile (needs a user gesture)
@@ -488,6 +488,7 @@ const App = {
     this.setCaption('Getting ready', 'Priya is preparing your questions…');
     this.setLive(''); // clear last session's transcript so it doesn't linger into this one
     this.qs = await this.getQuestions();
+    this.questionsReady = true;
     Track.ev('questions_ready');
     // warm the small, fixed set of acknowledgment lines while the greeting
     // plays, so the post-answer transitions never wait on a fresh fetch
@@ -902,11 +903,14 @@ const App = {
   },
 
   openSheet() {
+    const notReady = !this.questionsReady;
+    const dis = notReady ? 'disabled' : '';
     document.getElementById('sheetBody').innerHTML = `
       <p class="overline">Interview options</p>
       <div style="height:12px"></div>
-      <button class="btn tonal" style="margin-bottom:10px" onclick="App.repeatQ()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4a8 8 0 0 0-6.32 3.09L4.7 6.12A.5.5 0 0 0 4 6.55V10a.5.5 0 0 0 .5.5h3.45a.5.5 0 0 0 .35-.85L6.9 8.24A6 6 0 1 1 6 12H4a8 8 0 1 0 8-8z"/></svg> Repeat the question</button>
-      <button class="btn tonal" style="margin-bottom:10px" onclick="App.skipQ()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5a1 1 0 0 1 1.53-.85l9 6a1 1 0 0 1 0 1.7l-9 6A1 1 0 0 1 6 17V5z"/><rect x="16" y="4" width="2.5" height="14" rx="1"/></svg> Skip this question</button>
+      ${notReady ? '<p class="body" style="font-size:13px;margin-bottom:10px">Priya is still preparing your questions — one moment.</p>' : ''}
+      <button class="btn tonal" ${dis} style="margin-bottom:10px" onclick="App.repeatQ()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4a8 8 0 0 0-6.32 3.09L4.7 6.12A.5.5 0 0 0 4 6.55V10a.5.5 0 0 0 .5.5h3.45a.5.5 0 0 0 .35-.85L6.9 8.24A6 6 0 1 1 6 12H4a8 8 0 1 0 8-8z"/></svg> Repeat the question</button>
+      <button class="btn tonal" ${dis} style="margin-bottom:10px" onclick="App.skipQ()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5a1 1 0 0 1 1.53-.85l9 6a1 1 0 0 1 0 1.7l-9 6A1 1 0 0 1 6 17V5z"/><rect x="16" y="4" width="2.5" height="14" rx="1"/></svg> Skip this question</button>
       <button class="btn outline" style="margin-bottom:10px" onclick="App.quit()">Leave the interview</button>
       <button class="btn text" onclick="App.closeSheet()">Cancel</button>`;
     document.getElementById('sheet').classList.add('on');
@@ -914,6 +918,7 @@ const App = {
   closeSheet() { document.getElementById('sheet').classList.remove('on'); },
 
   async repeatQ() {
+    if (!this.questionsReady) return; // this.qs isn't populated yet — nothing real to repeat
     this.closeSheet();
     Voice.stop();
     this.askGen++; // invalidate the in-flight ask()/listen()/answered() cycle immediately —
@@ -930,6 +935,7 @@ const App = {
     this.ask(this.idx);
   },
   skipQ() {
+    if (!this.questionsReady) return; // this.qs isn't populated yet — nothing real to skip
     this.closeSheet();
     Voice.stop();
     this.askGen++; // invalidate immediately — skipping the last question calls
