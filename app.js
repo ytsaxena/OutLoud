@@ -568,7 +568,11 @@ const App = {
       if (!this._retried) { this._retried = true; this.listen(myAsk); return; }
     }
     this._retried = false;
-    this.answers.push({ q: this.qs[this.idx], a: txt, secs });
+    // hard cap: this.answers can never exceed 3 entries, full stop — a
+    // structural backstop independent of whatever upstream logic decides
+    // when/whether to push, so a session can never show more than 3
+    // "questions" on the feedback screen no matter what else goes wrong
+    if (this.answers.length < 3) this.answers.push({ q: this.qs[this.idx], a: txt, secs });
     Track.ev('answer_done', { q: this.idx + 1, words: txt.split(/\s+/).filter(Boolean).length, secs });
     this.micState('thinking', 'Got it');
     document.getElementById('qcount').children[this.idx].className = 'done';
@@ -680,7 +684,7 @@ const App = {
     // "skipped" is decided from our own answer data, not the model's word for
     // it — skipQ() always records a.a as '', so this can't be fooled by the
     // model ignoring the "(skipped)" instruction
-    const rewrites = this.answers.map((a, i) => {
+    const rewrites = this.answers.slice(0, 3).map((a, i) => {
       if (!a.a) return { saidIt: '(skipped)', betterIt: '' };
       const rw = inRewrites[i] || {};
       return {
@@ -731,7 +735,7 @@ const App = {
       fix: st.wpm > 160 ? 'You are speaking quite fast. Slow down and pause at the end of each sentence — it makes you sound more confident, not less.'
         : (st.words < 60 ? 'Your answers are short. Aim for four or five sentences: what happened, what you did, what the result was.'
           : 'Add one specific example to each answer. Numbers, names and places make an answer memorable.'),
-      rewrites: this.answers.map(a => ({
+      rewrites: this.answers.slice(0, 3).map(a => ({
         saidIt: a.a ? a.a.split(/\s+/).slice(0, 18).join(' ') : '(skipped)',
         betterIt: 'Try this shape: “I am <name>. I have <experience>. Recently I <one thing you did>, and it <result>.”'
       }))
@@ -946,7 +950,7 @@ const App = {
     // through to answered(), which would treat the empty capture as a
     // garbled answer and speak a "could not hear you" retry prompt
     if (Ears.active) { Ears.onDone = null; Ears.stop(); }
-    this.answers.push({ q: this.qs[this.idx], a: '', secs: 1 });
+    if (this.answers.length < 3) this.answers.push({ q: this.qs[this.idx], a: '', secs: 1 }); // same hard cap as answered()
     if (this.idx < 2) this.ask(this.idx + 1); else this.endSession();
   },
   quit() {
