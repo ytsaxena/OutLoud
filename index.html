@@ -441,8 +441,13 @@ svg{display:block}
 
 <!-- ══════════════ 2. GOAL ══════════════ -->
 <section class="screen" id="s-goal">
-  <div class="stepper"><i class="done"></i><i></i><i></i></div>
-  <p class="overline">Step 1 of 3</p>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <button class="icobtn" style="width:36px;height:36px;border-color:var(--outline-variant);background:var(--surface-container);color:var(--on-surface-variant)" onclick="Nav.go('s-welcome')" aria-label="Back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="stepper" style="margin-bottom:0;flex:1"><i class="done"></i><i></i><i></i></div>
+  </div>
+  <p class="overline">Step 1 of 3 · one-time setup</p>
   <h2 class="headline" style="margin:6px 0 6px">Why do you want to speak better?</h2>
   <p class="body" style="margin-bottom:22px">This decides which questions Priya asks you.</p>
   <div id="goals"></div>
@@ -451,7 +456,12 @@ svg{display:block}
 
 <!-- ══════════════ 3. LEVEL ══════════════ -->
 <section class="screen" id="s-level">
-  <div class="stepper"><i class="done"></i><i class="done"></i><i></i></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <button class="icobtn" style="width:36px;height:36px;border-color:var(--outline-variant);background:var(--surface-container);color:var(--on-surface-variant)" onclick="Nav.go('s-goal')" aria-label="Back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="stepper" style="margin-bottom:0;flex:1"><i class="done"></i><i class="done"></i><i></i></div>
+  </div>
   <p class="overline">Step 2 of 3</p>
   <h2 class="headline" style="margin:6px 0 6px">Where are you right now?</h2>
   <p class="body" style="margin-bottom:22px">Be honest. Nobody sees this. It only sets the difficulty.</p>
@@ -461,7 +471,12 @@ svg{display:block}
 
 <!-- ══════════════ 4. PERMISSION PRIMER ══════════════ -->
 <section class="screen" id="s-perm">
-  <div class="stepper"><i class="done"></i><i class="done"></i><i class="done"></i></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <button class="icobtn" style="width:36px;height:36px;border-color:var(--outline-variant);background:var(--surface-container);color:var(--on-surface-variant)" onclick="Nav.go('s-level')" aria-label="Back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="stepper" style="margin-bottom:0;flex:1"><i class="done"></i><i class="done"></i><i class="done"></i></div>
+  </div>
   <p class="overline">Step 3 of 3</p>
   <h2 class="headline" style="margin:6px 0 14px">Two quick permissions</h2>
 
