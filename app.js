@@ -527,11 +527,15 @@ const App = {
     document.getElementById('roomtop').classList.add('speaking');
     await Voice.say(q);
     document.getElementById('roomtop').classList.remove('speaking');
-    if (this.aborted || this.idx !== i) return; // a newer ask()/skip/repeat superseded this one while awaiting
+    if (this.aborted || this._ended || this.idx !== i) return; // a newer ask()/skip/repeat superseded this one while awaiting
     this.listen();
   },
 
   listen() {
+    // defensive: endSession() never changes this.idx, so a stale ask()/
+    // answered() continuation on the last question can reach here with a
+    // matching idx even after the session has already ended via skip
+    if (this.aborted || this._ended) return;
     this.micState('listening', 'Tap when done');
     this.setLive('');
     Track.ev('answer_started', this.idx + 1);
@@ -556,7 +560,7 @@ const App = {
       // too short — nudge once, then move on
       this.micState('idle-locked', 'Priya is speaking');
       await Voice.say('I could not hear you clearly. Take a breath, and try answering once more.');
-      if (this.aborted || this.idx !== startedIdx) return; // superseded by a skip/repeat while the retry line was speaking
+      if (this.aborted || this._ended || this.idx !== startedIdx) return; // superseded by a skip/repeat while the retry line was speaking
       if (!this._retried) { this._retried = true; this.listen(); return; }
     }
     this._retried = false;
@@ -570,13 +574,13 @@ const App = {
       document.getElementById('roomtop').classList.add('speaking');
       await Voice.say(ACKS[answeredIdx % ACKS.length]);
       document.getElementById('roomtop').classList.remove('speaking');
-      if (this.aborted || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the ack was speaking
+      if (this.aborted || this._ended || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the ack was speaking
       this.ask(answeredIdx + 1);
     } else {
       document.getElementById('roomtop').classList.add('speaking');
       await Voice.say(CLOSING_LINE);
       document.getElementById('roomtop').classList.remove('speaking');
-      if (this.aborted || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the closing line was speaking — endSession() already ran
+      if (this.aborted || this._ended || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the closing line was speaking — endSession() already ran
       this.endSession();
     }
   },
@@ -669,10 +673,14 @@ const App = {
     const scores = { fluency: c(s.fluency, 62), clarity: c(s.clarity, 62), structure: c(s.structure, 60), vocabulary: c(s.vocabulary, 64) };
     const total = Math.round((scores.fluency + scores.clarity + scores.structure + scores.vocabulary) / 4);
     const inRewrites = Array.isArray(r.rewrites) ? r.rewrites : [];
+    // "skipped" is decided from our own answer data, not the model's word for
+    // it — skipQ() always records a.a as '', so this can't be fooled by the
+    // model ignoring the "(skipped)" instruction
     const rewrites = this.answers.map((a, i) => {
+      if (!a.a) return { saidIt: '(skipped)', betterIt: '' };
       const rw = inRewrites[i] || {};
       return {
-        saidIt: rw.saidIt || (a.a ? a.a.split(/[.?!]/)[0] : '(skipped)'),
+        saidIt: rw.saidIt || a.a.split(/[.?!]/)[0],
         betterIt: rw.betterIt || 'Say it slowly, and add one detail: what you did, and what happened after.'
       };
     });
@@ -743,16 +751,25 @@ const App = {
     ).join('');
     setTimeout(() => document.querySelectorAll('.fill').forEach(f => f.style.width = f.dataset.w + '%'), 120);
     document.getElementById('fixText').textContent = fb.fix;
-    document.getElementById('rewrites').innerHTML = fb.rewrites.map((r, i) => `
-      <div${i > 0 ? ' style="margin-top:20px;padding-top:20px;border-top:1px solid var(--outline-variant)"' : ''}>
+    document.getElementById('rewrites').innerHTML = fb.rewrites.map((r, i) => {
+      const skipped = !r.saidIt || r.saidIt === '(skipped)';
+      const rowStyle = i > 0 ? ' style="margin-top:20px;padding-top:20px;border-top:1px solid var(--outline-variant)"' : '';
+      if (skipped) {
+        return `<div${rowStyle}>
+          <p class="label" style="margin-bottom:8px">Question ${i + 1}</p>
+          <p class="body" style="font-style:italic">You skipped this question.</p>
+        </div>`;
+      }
+      return `<div${rowStyle}>
         <p class="label" style="margin-bottom:8px">Question ${i + 1}</p>
-        <p class="quote">${r.saidIt && r.saidIt !== '(skipped)' ? '“' + this.esc(r.saidIt) + '”' : 'Skipped — here is how you could answer it'}</p>
+        <p class="quote">“${this.esc(r.saidIt)}”</p>
         <div class="better">${this.esc(r.betterIt)}</div>
         <button class="btn tonal small" style="width:100%;margin-top:12px;gap:8px" id="hearBtn${i}" onclick="App.hearBetter(${i})">
           <svg class="hear-ico" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 12a4.5 4.5 0 0 0-2-3.74v7.47A4.5 4.5 0 0 0 16.5 12z"/><path d="M14.5 4.6v2.06A7.99 7.99 0 0 1 19 12a7.99 7.99 0 0 1-4.5 7.34v2.06A9.99 9.99 0 0 0 21 12a9.99 9.99 0 0 0-6.5-7.4z"/></svg>
           <span class="hear-label">Hear how it sounds</span>
         </button>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     const s = fb.stats;
     document.getElementById('stats').innerHTML = `
       <div class="stat big"><span>words spoken</span><b>${s.words}</b></div>
