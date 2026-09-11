@@ -97,6 +97,13 @@ const Auth = {
     Track.ev('continue_guest');
     Nav.go('s-goal');
   },
+  // the welcome screen's primary button does double duty: sign in if
+  // signed out, or just proceed if a session already exists (pressing
+  // back to step 1 must not force signing in again)
+  primaryAction() {
+    if (this.user) { Track.ev('continue_signed_in'); Nav.go('s-goal'); }
+    else this.signInGoogle();
+  },
   signOut() {
     if (!window.FirebaseAuth || !this.user) return;
     window.FirebaseAuth.signOut().then(() => {
@@ -106,12 +113,29 @@ const Auth = {
   },
   paintIdentity() {
     const el = document.getElementById('identityChip');
-    if (!el) return;
+    if (el) {
+      if (this.user) {
+        el.style.display = '';
+        el.textContent = 'Signed in as ' + (this.user.displayName || this.user.email || 'you') + ' — tap to sign out';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+    const label = document.getElementById('primaryAuthLabel');
+    if (!label) return;
+    const icon = document.getElementById('googleIcon');
+    const guestBtn = document.getElementById('btnGuest');
+    const signOutEl = document.getElementById('welcomeSignOut');
     if (this.user) {
-      el.style.display = '';
-      el.textContent = 'Signed in as ' + (this.user.displayName || this.user.email || 'you') + ' — tap to sign out';
+      label.textContent = 'Continue as ' + (this.user.displayName || this.user.email || 'you').split(' ')[0];
+      if (icon) icon.style.display = 'none';
+      if (guestBtn) guestBtn.style.display = 'none';
+      if (signOutEl) signOutEl.style.display = '';
     } else {
-      el.style.display = 'none';
+      label.textContent = 'Continue with Google';
+      if (icon) icon.style.display = '';
+      if (guestBtn) guestBtn.style.display = '';
+      if (signOutEl) signOutEl.style.display = 'none';
     }
   }
 };
