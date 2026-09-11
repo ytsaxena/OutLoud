@@ -486,6 +486,7 @@ const App = {
     Nav.go('room');
     this.mountCam();
     this.setCaption('Getting ready', 'Priya is preparing your questions…');
+    this.setLive(''); // clear last session's transcript so it doesn't linger into this one
     this.qs = await this.getQuestions();
     Track.ev('questions_ready');
     // warm the small, fixed set of acknowledgment lines while the greeting
