@@ -393,7 +393,7 @@ const TIPS = [
 const App = {
   sel: { goal: null, level: null },
   qs: [], answers: [], idx: 0, stream: null, camOn: true, sessionStart: 0, aborted: false,
-  lastBetters: [],
+  lastBetters: [], askGen: 0,
 
   boot() {
     Store.load();
@@ -454,7 +454,7 @@ const App = {
       Store.d.profile = { goal: this.sel.goal || 'job', level: this.sel.level || 'stumble' };
       Store.save();
     }
-    this.aborted = false; this.answers = []; this.idx = 0; this.sessionStart = Date.now(); this._ended = false;
+    this.aborted = false; this.answers = []; this.idx = 0; this.sessionStart = Date.now(); this._ended = false; this.askGen = 0;
     Track.ev('session_start');
 
     // unlock speech synthesis / audio playback on mobile (needs a user gesture)
@@ -518,6 +518,7 @@ const App = {
   async ask(i) {
     if (this.aborted) return;
     this.idx = i;
+    const myAsk = ++this.askGen; // invalidates any still-in-flight ask()/answered() from before
     const dots = document.getElementById('qcount').children;
     for (let k = 0; k < 3; k++) { dots[k].className = k < i ? 'done' : (k === i ? 'on' : ''); }
     const q = this.qs[i];
@@ -527,30 +528,32 @@ const App = {
     document.getElementById('roomtop').classList.add('speaking');
     await Voice.say(q);
     document.getElementById('roomtop').classList.remove('speaking');
-    if (this.aborted || this._ended || this.idx !== i) return; // a newer ask()/skip/repeat superseded this one while awaiting
-    this.listen();
+    if (this.aborted || this._ended || this.askGen !== myAsk) return; // a newer ask()/skip/repeat superseded this one while awaiting
+    this.listen(myAsk);
   },
 
-  listen() {
-    // defensive: endSession() never changes this.idx, so a stale ask()/
-    // answered() continuation on the last question can reach here with a
-    // matching idx even after the session has already ended via skip
-    if (this.aborted || this._ended) return;
+  listen(myAsk) {
+    if (this.aborted || this._ended || this.askGen !== myAsk) return;
     this.micState('listening', 'Tap when done');
     this.setLive('');
     Track.ev('answer_started', this.idx + 1);
     Ears.start(
       txt => this.setLive(txt),
-      (txt, secs, reason) => this.answered(txt, secs, reason)
+      (txt, secs, reason) => this.answered(txt, secs, reason, myAsk)
     );
     // warm the next line's audio while the user is still talking, so the
     // ack/next-question transition plays without a fetch delay
     Voice.prefetch(this.idx < 2 ? this.qs[this.idx + 1] : CLOSING_LINE);
   },
 
-  async answered(txt, secs, reason) {
-    if (this.aborted) return;
-    const startedIdx = this.idx;
+  async answered(txt, secs, reason, myAsk) {
+    // a single check up front: askGen is bumped by every ask()/skipQ()/
+    // repeatQ()/quit(), so any mismatch means this callback belongs to a
+    // listen cycle that's already been superseded — regardless of whether
+    // this.idx happens to still match (repeat re-asks the same idx, and
+    // endSession() never changes idx at all, so idx comparisons alone
+    // can't detect either case)
+    if (this.aborted || this._ended || this.askGen !== myAsk) return;
     if (reason === 'unsupported' || reason === 'failed') {
       this.micState('ready', 'Tap to try again');
       this.setLive('');
@@ -560,8 +563,8 @@ const App = {
       // too short — nudge once, then move on
       this.micState('idle-locked', 'Priya is speaking');
       await Voice.say('I could not hear you clearly. Take a breath, and try answering once more.');
-      if (this.aborted || this._ended || this.idx !== startedIdx) return; // superseded by a skip/repeat while the retry line was speaking
-      if (!this._retried) { this._retried = true; this.listen(); return; }
+      if (this.aborted || this._ended || this.askGen !== myAsk) return; // superseded while the retry line was speaking
+      if (!this._retried) { this._retried = true; this.listen(myAsk); return; }
     }
     this._retried = false;
     this.answers.push({ q: this.qs[this.idx], a: txt, secs });
@@ -574,13 +577,13 @@ const App = {
       document.getElementById('roomtop').classList.add('speaking');
       await Voice.say(ACKS[answeredIdx % ACKS.length]);
       document.getElementById('roomtop').classList.remove('speaking');
-      if (this.aborted || this._ended || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the ack was speaking
+      if (this.aborted || this._ended || this.askGen !== myAsk) return; // superseded while the ack was speaking
       this.ask(answeredIdx + 1);
     } else {
       document.getElementById('roomtop').classList.add('speaking');
       await Voice.say(CLOSING_LINE);
       document.getElementById('roomtop').classList.remove('speaking');
-      if (this.aborted || this._ended || this.idx !== answeredIdx) return; // superseded by a skip/repeat while the closing line was speaking — endSession() already ran
+      if (this.aborted || this._ended || this.askGen !== myAsk) return; // superseded while the closing line was speaking — endSession() already ran
       this.endSession();
     }
   },
@@ -588,7 +591,7 @@ const App = {
   micTap() {
     const st = document.getElementById('mic').dataset.state;
     if (st === 'listening') { Ears.stop(); Track.ev('answer_manual_stop'); }
-    else if (st === 'ready') { this.listen(); }
+    else if (st === 'ready') { this.listen(this.askGen); }
     else if (st === 'idle-locked') { Voice.stop(); }
   },
 
@@ -913,6 +916,10 @@ const App = {
   async repeatQ() {
     this.closeSheet();
     Voice.stop();
+    this.askGen++; // invalidate the in-flight ask()/listen()/answered() cycle immediately —
+                    // ask(this.idx) below re-asks the *same* index, so relying on it alone
+                    // to bump this (after a 200ms delay) leaves a window where a stale
+                    // continuation's askGen check would still pass
     // suppress the pending onDone callback so stopping the mic doesn't fall
     // through to answered(), which would treat the partial capture as a
     // garbled answer and speak a "could not hear you" retry prompt —
@@ -925,6 +932,9 @@ const App = {
   skipQ() {
     this.closeSheet();
     Voice.stop();
+    this.askGen++; // invalidate immediately — skipping the last question calls
+                    // endSession() directly, which never changes this.idx, so a
+                    // stale continuation needs this (not idx) to detect it's superseded
     Track.ev('skip_question');
     // suppress the pending onDone callback so stopping the mic doesn't fall
     // through to answered(), which would treat the empty capture as a
@@ -935,6 +945,7 @@ const App = {
   },
   quit() {
     this.closeSheet(); this.aborted = true;
+    this.askGen++;
     Voice.stop(); if (Ears.active) Ears.stop();
     this.stopMedia();
     Track.ev('session_abandon', this.idx + 1);
