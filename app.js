@@ -393,7 +393,7 @@ const TIPS = [
 const App = {
   sel: { goal: null, level: null },
   qs: [], answers: [], idx: 0, stream: null, camOn: true, sessionStart: 0, aborted: false,
-  lastBetter: '',
+  lastBetters: [],
 
   boot() {
     Store.load();
@@ -668,14 +668,21 @@ const App = {
     const s = r.scores || {};
     const scores = { fluency: c(s.fluency, 62), clarity: c(s.clarity, 62), structure: c(s.structure, 60), vocabulary: c(s.vocabulary, 64) };
     const total = Math.round((scores.fluency + scores.clarity + scores.structure + scores.vocabulary) / 4);
+    const inRewrites = Array.isArray(r.rewrites) ? r.rewrites : [];
+    const rewrites = this.answers.map((a, i) => {
+      const rw = inRewrites[i] || {};
+      return {
+        saidIt: rw.saidIt || (a.a ? a.a.split(/[.?!]/)[0] : '(skipped)'),
+        betterIt: rw.betterIt || 'Say it slowly, and add one detail: what you did, and what happened after.'
+      };
+    });
     return {
       total,
       scores,
       headline: r.headline || 'You finished the whole interview. That is the hardest part.',
       wins: (Array.isArray(r.wins) ? r.wins : []).slice(0, 3).filter(Boolean),
       fix: r.fix || 'Try to give one clear example in each answer, so the interviewer can picture it.',
-      saidIt: r.saidIt || (this.answers[0] ? this.answers[0].a.split(/[.?!]/)[0] : ''),
-      betterIt: r.betterIt || 'Say it slowly, and add one detail: what you did, and what happened after.'
+      rewrites
     };
   },
 
@@ -712,13 +719,15 @@ const App = {
       fix: st.wpm > 160 ? 'You are speaking quite fast. Slow down and pause at the end of each sentence — it makes you sound more confident, not less.'
         : (st.words < 60 ? 'Your answers are short. Aim for four or five sentences: what happened, what you did, what the result was.'
           : 'Add one specific example to each answer. Numbers, names and places make an answer memorable.'),
-      saidIt: this.answers[0] ? this.answers[0].a.split(/\s+/).slice(0, 18).join(' ') : '',
-      betterIt: 'Try this shape: “I am <name>. I have <experience>. Recently I <one thing you did>, and it <result>.”'
+      rewrites: this.answers.map(a => ({
+        saidIt: a.a ? a.a.split(/\s+/).slice(0, 18).join(' ') : '(skipped)',
+        betterIt: 'Try this shape: “I am <name>. I have <experience>. Recently I <one thing you did>, and it <result>.”'
+      }))
     };
   },
 
   paintScore(fb) {
-    this.lastBetter = fb.betterIt;
+    this.lastBetters = fb.rewrites.map(r => r.betterIt);
     this.paintStreakBar('streakBar', 'streakBarN');
     const el = document.getElementById('totalScore');
     let n = 0;
@@ -734,8 +743,16 @@ const App = {
     ).join('');
     setTimeout(() => document.querySelectorAll('.fill').forEach(f => f.style.width = f.dataset.w + '%'), 120);
     document.getElementById('fixText').textContent = fb.fix;
-    document.getElementById('saidIt').textContent = fb.saidIt ? '“' + fb.saidIt + '”' : 'Your answer';
-    document.getElementById('betterIt').textContent = fb.betterIt;
+    document.getElementById('rewrites').innerHTML = fb.rewrites.map((r, i) => `
+      <div${i > 0 ? ' style="margin-top:20px;padding-top:20px;border-top:1px solid var(--outline-variant)"' : ''}>
+        <p class="label" style="margin-bottom:8px">Question ${i + 1}</p>
+        <p class="quote">${r.saidIt && r.saidIt !== '(skipped)' ? '“' + this.esc(r.saidIt) + '”' : 'Skipped — here is how you could answer it'}</p>
+        <div class="better">${this.esc(r.betterIt)}</div>
+        <button class="btn tonal small" style="width:100%;margin-top:12px;gap:8px" id="hearBtn${i}" onclick="App.hearBetter(${i})">
+          <svg class="hear-ico" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 12a4.5 4.5 0 0 0-2-3.74v7.47A4.5 4.5 0 0 0 16.5 12z"/><path d="M14.5 4.6v2.06A7.99 7.99 0 0 1 19 12a7.99 7.99 0 0 1-4.5 7.34v2.06A9.99 9.99 0 0 0 21 12a9.99 9.99 0 0 0-6.5-7.4z"/></svg>
+          <span class="hear-label">Hear how it sounds</span>
+        </button>
+      </div>`).join('');
     const s = fb.stats;
     document.getElementById('stats').innerHTML = `
       <div class="stat big"><span>words spoken</span><b>${s.words}</b></div>
@@ -744,7 +761,22 @@ const App = {
       <div class="stat"><b>${s.longest}</b><span>longest answer</span></div>`;
   },
 
-  hearBetter() { Voice.say(this.lastBetter || ''); Track.ev('hear_better'); },
+  async hearBetter(i) {
+    const btn = document.getElementById('hearBtn' + i);
+    const icon = btn && btn.querySelector('.hear-ico');
+    const label = btn && btn.querySelector('.hear-label');
+    Track.ev('hear_better', i + 1);
+    if (btn) btn.disabled = true;
+    if (icon) icon.style.visibility = 'hidden';
+    if (label) label.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(0,0,0,.25);border-top-color:currentColor;vertical-align:-2px"></span> Loading…';
+    try {
+      await Voice.say((this.lastBetters && this.lastBetters[i]) || '');
+    } finally {
+      if (btn) btn.disabled = false;
+      if (icon) icon.style.visibility = '';
+      if (label) label.textContent = 'Hear how it sounds';
+    }
+  },
 
   finishToHome() { Nav.go('s-home'); },
 

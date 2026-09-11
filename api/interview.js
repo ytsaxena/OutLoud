@@ -64,7 +64,9 @@ Score each dimension 40-100:
 - structure: was there a beginning, a middle and an end?
 - vocabulary: did they use words that fit the situation?
 
-Then write the feedback.
+Then write the feedback. For EACH of the ${answers.length} answers above, give one rewrite pair,
+in the same order as the questions. If an answer was skipped or empty, set saidIt to "(skipped)"
+and make betterIt a short example of how they could have answered that specific question instead.
 
 Return ONLY JSON in exactly this shape:
 {
@@ -72,8 +74,11 @@ Return ONLY JSON in exactly this shape:
  "headline":"one warm sentence, max 16 words, about how they did overall",
  "wins":["specific thing they did well, quoting their own words","second one","third one"],
  "fix":"the single most useful thing to improve, 1-2 sentences, phrased as an action",
- "saidIt":"one real sentence copied from their answers that could be stronger",
- "betterIt":"the same idea rewritten in stronger, simple spoken English, max 35 words"
+ "rewrites":[
+   {"saidIt":"one real sentence from answer 1 that could be stronger, or \\"(skipped)\\" if none was given","betterIt":"the same idea rewritten in stronger, simple spoken English, max 35 words"},
+   {"saidIt":"same, for answer 2","betterIt":"..."},
+   {"saidIt":"same, for answer 3","betterIt":"..."}
+ ]
 }`;
 }
 
