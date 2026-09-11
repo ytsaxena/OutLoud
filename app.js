@@ -855,7 +855,11 @@ const App = {
   async repeatQ() {
     this.closeSheet();
     Voice.stop();
-    if (Ears.active) Ears.stop();
+    // suppress the pending onDone callback so stopping the mic doesn't fall
+    // through to answered(), which would treat the partial capture as a
+    // garbled answer and speak a "could not hear you" retry prompt —
+    // same fix as skipQ()
+    if (Ears.active) { Ears.onDone = null; Ears.stop(); }
     Track.ev('repeat_question');
     await this.sleep(200);
     this.ask(this.idx);
