@@ -43,12 +43,18 @@ const Store = {
 
 /* ---------------- metrics ---------------- */
 const Track = {
+  // persistent "don't send this device's activity to GA" flag, set via
+  // ?notrack=1 in the URL (once) — local history in Store.d.events still
+  // works normally either way, only the gtag/GA4 send is skipped
+  noTrack() {
+    try { return localStorage.getItem('outloud_notrack') === '1'; } catch (e) { return false; }
+  },
   ev(name, meta) {
     Store.d.events.push({ n: name, t: Date.now(), m: meta || null });
     if (Store.d.events.length > 400) Store.d.events.splice(0, 100);
     Store.save();
     try {
-      if (typeof gtag === 'function') {
+      if (typeof gtag === 'function' && !this.noTrack()) {
         const params = (meta && typeof meta === 'object') ? meta : (meta === undefined || meta === null ? {} : { value: meta });
         gtag('event', name, params);
       }
@@ -160,7 +166,7 @@ const Nav = {
   // shows which step users actually left from.
   track(id) {
     try {
-      if (typeof gtag !== 'function') return;
+      if (typeof gtag !== 'function' || Track.noTrack()) return;
       const name = this.names[id] || id;
       gtag('event', 'page_view', {
         page_title: 'OutLoud — ' + name,
@@ -396,6 +402,13 @@ const App = {
   lastBetters: [], askGen: 0,
 
   boot() {
+    // ?notrack=1 once sets a persistent flag on this device to stop sending
+    // to GA4 (your own dev/test activity); ?notrack=0 clears it again
+    try {
+      const nt = new URLSearchParams(location.search).get('notrack');
+      if (nt === '1') localStorage.setItem('outloud_notrack', '1');
+      else if (nt === '0') localStorage.removeItem('outloud_notrack');
+    } catch (e) {}
     Store.load();
     Theme.init();
     Auth.init();
